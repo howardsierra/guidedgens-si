@@ -25,3 +25,40 @@ export const DEFAULT_GUIDE = `[Author's note for {{char}}'s next reply. This is 
 What should happen: {{input}}
 {{voice}}
 Write it the way {{char}} would really do and say it. Stay fully in {{char}}'s voice (personality, attitude, speech patterns and vocabulary from their description and earlier replies) and keep the same narration style, formatting and length as {{char}}'s previous messages. Treat the direction as what happens, not as wording to copy. Do not speak, act or decide for {{user}}.]`;
+
+// Corrections. {{speaker}}, {{instruction}}, {{message}}, {{selection}} and
+// {{about}} are filled by the extension.
+
+export const DEFAULT_CORRECT = `[Out of character: you are editing one message from this story, written by {{speaker}}. Rewrite it so it follows the correction below.
+{{about}}
+Correction: {{instruction}}
+
+Message to edit:
+"""
+{{message}}
+"""
+
+Rules:
+- Change only what the correction asks for. Keep everything else (events, details, wording, formatting and length) as close to the original as possible.
+- Keep {{speaker}}'s voice: their personality, speech patterns and vocabulary, and the message's point of view and tense.
+- Reply with the full corrected message only: no notes, labels, quotes around it or code fences.]`;
+
+export const DEFAULT_CORRECT_SELECTION = `[Out of character: you are editing one passage of a message from this story, written by {{speaker}}. Rewrite only that passage so it follows the correction below.
+{{about}}
+Correction: {{instruction}}
+
+Full message, for context only:
+"""
+{{message}}
+"""
+
+Passage to rewrite:
+"""
+{{selection}}
+"""
+
+Rules:
+- Your reply replaces the passage word for word, so it must fit seamlessly with the text before and after it.
+- Change only what the correction asks for and keep the rest of the passage as it is.
+- Keep {{speaker}}'s voice: their personality, speech patterns and vocabulary, and the message's point of view and tense.
+- Reply with the rewritten passage only: no notes, labels, quotes around it or code fences.]`;

@@ -7,12 +7,15 @@ import {
     hasPovSlip,
 } from './src/text.js';
 import {
+    DEFAULT_CORRECT,
+    DEFAULT_CORRECT_SELECTION,
     DEFAULT_GUIDE,
     DEFAULT_IMPERSONATE,
     IMPERSONATE_DIRECTION_EMPTY,
     IMPERSONATE_DIRECTION_WITH_INPUT,
     POV_RETRY_NOTE,
 } from './src/prompts.js';
+import { openCorrections } from './src/corrections.js';
 import { mountSettings, renderBar, setBusy, setImpersonateUndo, setStatus } from './src/ui.js';
 
 const MODULE = 'guidedgens_si';
@@ -27,6 +30,7 @@ const DEFAULTS = Object.freeze({
     showImpersonate: true,
     showResponse: true,
     showSwipe: true,
+    showCorrect: true,
     compactButtons: false,
     userPronouns: '',
     includePersona: true,
@@ -37,6 +41,9 @@ const DEFAULTS = Object.freeze({
     guideRole: 'system',
     impersonateTemplate: '',
     guideTemplate: '',
+    correctIncludeHistory: true,
+    correctTemplate: '',
+    correctSelectionTemplate: '',
 });
 
 let busy = false;
@@ -307,9 +314,20 @@ const BUTTONS = [
         hint: 'A new swipe of the character\'s last message, following your direction. Empty box = plain swipe.',
         busyText: 'Rewriting the reply…', action: guidedSwipe,
     },
+    {
+        id: 'ggsi_correct', setting: 'showCorrect', icon: 'fa-wand-magic-sparkles', label: 'Correct',
+        hint: 'Rewrite a message (or just a highlighted part of it) following your instructions, in the speaker\'s voice.',
+        busyText: 'Correcting the message…',
+        action: () => openCorrections({ settings, save, exclusive, substitute }),
+    },
 ];
 
-const TEMPLATE_DEFAULTS = { impersonateTemplate: DEFAULT_IMPERSONATE, guideTemplate: DEFAULT_GUIDE };
+const TEMPLATE_DEFAULTS = {
+    impersonateTemplate: DEFAULT_IMPERSONATE,
+    guideTemplate: DEFAULT_GUIDE,
+    correctTemplate: DEFAULT_CORRECT,
+    correctSelectionTemplate: DEFAULT_CORRECT_SELECTION,
+};
 
 function init() {
     const s = settings();

@@ -133,6 +133,7 @@ function settingsHtml() {
         ${toggle('showImpersonate', 'Impersonate', 'Turn an outline into your persona\'s message.', 'fa-user-pen')}
         ${toggle('showResponse', 'Respond', 'Character replies following your direction.', 'fa-comment-dots')}
         ${toggle('showSwipe', 'Swipe', 'New swipe of the last reply following your direction.', 'fa-arrows-rotate')}
+        ${toggle('showCorrect', 'Correct', 'Rewrite a message, or a highlighted part of it, from instructions.', 'fa-wand-magic-sparkles')}
         ${toggle('compactButtons', 'Compact', 'Icons only (they switch to icons on narrow screens anyway).', 'fa-compress')}
       </section>
 
@@ -170,9 +171,11 @@ function settingsHtml() {
 
       <details class="ggsi-card ggsi-advanced">
         <summary><h4><i class="fa-solid fa-code"></i> Prompts <small>Advanced</small></h4><i class="fa-solid fa-chevron-down ggsi-caret"></i></summary>
-        <p class="ggsi-help">Placeholders: <code>{{input}}</code> <code>{{direction}}</code> <code>{{persona}}</code> <code>{{voice}}</code> <code>{{pronouns}}</code>, plus normal macros like <code>{{user}}</code> and <code>{{char}}</code>.</p>
+        <p class="ggsi-help">Placeholders: <code>{{input}}</code> <code>{{direction}}</code> <code>{{persona}}</code> <code>{{voice}}</code> <code>{{pronouns}}</code>; for corrections <code>{{speaker}}</code> <code>{{instruction}}</code> <code>{{message}}</code> <code>{{selection}}</code> <code>{{about}}</code>; plus normal macros like <code>{{user}}</code> and <code>{{char}}</code>.</p>
         ${template('impersonateTemplate', 'Impersonate prompt')}
         ${template('guideTemplate', 'Respond / Swipe direction')}
+        ${template('correctTemplate', 'Correct: whole message')}
+        ${template('correctSelectionTemplate', 'Correct: highlighted part')}
       </details>
     </div></div>
   </div>

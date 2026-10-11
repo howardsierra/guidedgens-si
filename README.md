@@ -2,7 +2,7 @@
 
 A small, focused SillyTavern extension based on the idea behind
 [Guided Generations](https://github.com/Samueras/GuidedGenerations-Extension) by Samueras.
-It has only three buttons, and they're built to stay in character.
+It has just four buttons, and they're built to stay in character.
 
 ![The Guided Gens SI button bar above the chat input](docs/bar.png)
 
@@ -11,6 +11,7 @@ It has only three buttons, and they're built to stay in character.
 | **Impersonate** | Turns the outline in your input box into **your persona's** next message, always in **third person**. Afterwards the button becomes **Outline**: click it to get your outline back. |
 | **Respond** | The character replies following the direction in your input box, **in their own voice**. |
 | **Swipe** | A new swipe of the character's last message, following your direction, **in their own voice**. Leave the box empty for a plain swipe. |
+| **Correct** | Rewrite any message, or just a highlighted part of it, from your instructions, keeping the speaker's voice. See [Corrections](#corrections). |
 
 While one runs, it shows a spinner and a short status, and the other buttons are locked so you can't start two generations at once. On narrow screens (or with **Compact** on) the bar shows icons only.
 
@@ -30,6 +31,25 @@ While one runs, it shows a spinner and a short status, and the other buttons are
 - This version sends it as a private author's note. The note says it describes *what happens*, not *how to word it*, and tells the model to keep the character's personality, speech patterns, formatting and length.
 - It includes a few of the character's own recent lines as a voice anchor. For swipes, the message being replaced is left out.
 - The note goes in through SillyTavern's extension-prompt API rather than `/inject` slash commands, so `|` or other special characters in your text can't break it. It's always removed afterwards, even if generation fails or you press stop.
+
+## Corrections
+
+Click **Correct** to open the corrections window.
+
+<img src="docs/correct.png" alt="Corrections window" width="480">
+
+1. **Pick the message.** It opens on the latest message; use the arrows to go to older ones (yours or the character's). For the character's latest reply you can also pick which swipe to start from.
+2. **Optionally highlight part of it.** Only that part is rewritten, and the rest of the message stays exactly as it was. A bar shows what's selected; **×** goes back to the whole message.
+3. **Say what should change**, or tap a quick fix (fix grammar, shorter, more in character, don't act for you, less repetition). Ctrl/⌘+Enter applies.
+4. **Include chat history** (on by default) gives the model the whole story and character card. Turn it off for a cheaper call; the speaker's description is still included so the voice holds.
+
+<img src="docs/correct-selection.png" alt="Correcting only a highlighted part" width="480">
+
+Where the result goes:
+- **The character's latest reply:** added as a **new swipe**, so the original is one swipe back.
+- **Any other message (including yours):** edited in place, and the notification has an **undo**: click it within a few seconds to put the original back.
+
+The rewrite prompt asks the model to change only what you asked for and to keep the speaker's voice, point of view and tense. Stray code fences, `"""` marks, name prefixes and added quotes are cleaned off before it's applied.
 
 ## Installation
 
@@ -55,7 +75,7 @@ Under **Extensions → Guided Gens SI**. Everything follows your SillyTavern the
   - **Voice samples**: how many of the character's recent lines to quote (0 = off).
   - **Direction depth**: where the author's note goes in the chat (0 = after the last message).
   - **Direction role**: System, User or Assistant.
-- **Prompts (Advanced)**: edit both prompts; **Reset** restores the defaults.
+- **Prompts (Advanced)**: edit the impersonate, direction and both correction prompts; **Reset** restores the defaults.
 
 ## Tips
 

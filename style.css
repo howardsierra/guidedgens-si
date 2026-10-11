@@ -1,7 +1,8 @@
 /* Guided Gens SI. Every colour is derived from the active SillyTavern theme. */
 
 #ggsi_bar,
-#ggsi_settings {
+#ggsi_settings,
+.ggsi-correct {
     --ggsi-fg: var(--SmartThemeBodyColor, #dcdcd2);
     --ggsi-accent: var(--SmartThemeQuoteColor, #e18a24);
     --ggsi-border: var(--SmartThemeBorderColor, rgba(0, 0, 0, 0.5));
@@ -178,27 +179,27 @@
 
 /* --- Settings panel ---------------------------------------------------- */
 
-#ggsi_settings .inline-drawer-header b i {
+:is(#ggsi_settings, .ggsi-correct) .inline-drawer-header b i {
     margin-right: 4px;
     color: var(--ggsi-accent);
 }
 
-#ggsi_settings .ggsi-body {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-body {
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding-top: 6px;
 }
 
-#ggsi_settings .ggsi-intro,
-#ggsi_settings .ggsi-help {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-intro,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-help {
     margin: 0;
     font-size: 0.88em;
     color: var(--ggsi-muted);
     line-height: 1.45;
 }
 
-#ggsi_settings .ggsi-card {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-card {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -208,7 +209,7 @@
     background: var(--ggsi-surface);
 }
 
-#ggsi_settings .ggsi-card h4 {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-card h4 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -216,13 +217,13 @@
     font-size: 0.95em;
 }
 
-#ggsi_settings .ggsi-card h4 > i {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-card h4 > i {
     width: 1.1em;
     text-align: center;
     color: var(--ggsi-accent);
 }
 
-#ggsi_settings .ggsi-card h4 small {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-card h4 small {
     margin-left: auto;
     padding: 1px 8px;
     border-radius: 999px;
@@ -232,7 +233,7 @@
     font-weight: 500;
 }
 
-#ggsi_settings .ggsi-row {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-row {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -240,27 +241,27 @@
     border-top: 1px solid var(--ggsi-line);
 }
 
-#ggsi_settings .ggsi-card h4 + .ggsi-row {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-card h4 + .ggsi-row {
     border-top: none;
 }
 
-#ggsi_settings .ggsi-toggle-row {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-toggle-row {
     cursor: pointer;
 }
 
-#ggsi_settings .ggsi-stack {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-stack {
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
 }
 
-#ggsi_settings .ggsi-row-icon {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-row-icon {
     width: 1.2em;
     text-align: center;
     color: var(--ggsi-muted);
 }
 
-#ggsi_settings .ggsi-row-text {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-row-text {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
@@ -268,19 +269,19 @@
     min-width: 0;
 }
 
-#ggsi_settings .ggsi-row-title {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-row-title {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 500;
 }
 
-#ggsi_settings .ggsi-row-text small {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-row-text small {
     color: var(--ggsi-muted);
     line-height: 1.35;
 }
 
-#ggsi_settings .ggsi-value {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-value {
     margin-left: auto;
     min-width: 2.2em;
     padding: 0 7px;
@@ -293,7 +294,7 @@
 }
 
 /* Switch */
-#ggsi_settings .ggsi-switch {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch {
     appearance: none;
     -webkit-appearance: none;
     position: relative;
@@ -306,9 +307,21 @@
     border: 1px solid var(--ggsi-line);
     cursor: pointer;
     transition: background-color 0.18s, border-color 0.18s;
+    /* Undo SillyTavern's global checkbox look. */
+    display: inline-block;
+    overflow: visible;
+    outline: none;
+    box-shadow: none;
+    filter: none;
+    transform: none;
 }
 
-#ggsi_settings .ggsi-switch::after {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch::before {
+    content: none;
+    display: none;
+}
+
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch::after {
     content: "";
     position: absolute;
     top: 2px;
@@ -321,25 +334,25 @@
     transition: transform 0.18s, opacity 0.18s;
 }
 
-#ggsi_settings .ggsi-switch:checked {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch:checked {
     background: var(--ggsi-accent);
     border-color: var(--ggsi-accent);
 }
 
-#ggsi_settings .ggsi-switch:checked::after {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch:checked::after {
     transform: translateX(16px);
     opacity: 1;
 }
 
-#ggsi_settings .ggsi-switch:focus-visible,
-#ggsi_settings .ggsi-range:focus-visible,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-switch:focus-visible,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-range:focus-visible,
 #ggsi_settings button:focus-visible {
     outline: 2px solid var(--ggsi-accent);
     outline-offset: 2px;
 }
 
 /* Slider */
-#ggsi_settings .ggsi-range {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-range {
     width: 100%;
     margin: 2px 0;
     accent-color: var(--ggsi-accent);
@@ -347,26 +360,26 @@
 }
 
 /* Pronoun chips */
-#ggsi_settings .ggsi-pronouns {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-pronouns {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
 }
 
-#ggsi_settings .ggsi-pronouns .text_pole {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-pronouns .text_pole {
     flex: 1 1 140px;
     margin: 0;
 }
 
-#ggsi_settings .ggsi-chips {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-chips {
     display: flex;
     gap: 6px;
 }
 
-#ggsi_settings .ggsi-chip,
-#ggsi_settings .ggsi-ghost,
-#ggsi_settings .ggsi-segmented button {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-chip,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-ghost,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-segmented button {
     all: unset;
     box-sizing: border-box;
     cursor: pointer;
@@ -374,25 +387,25 @@
     transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 
-#ggsi_settings .ggsi-chip {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-chip {
     padding: 3px 10px;
     border: 1px solid var(--ggsi-line);
     border-radius: 999px;
 }
 
-#ggsi_settings .ggsi-chip:hover,
-#ggsi_settings .ggsi-ghost:hover {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-chip:hover,
+:is(#ggsi_settings, .ggsi-correct) .ggsi-ghost:hover {
     background: var(--ggsi-surface-hover);
 }
 
-#ggsi_settings .ggsi-chip.ggsi-active {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-chip.ggsi-active {
     border-color: var(--ggsi-accent);
     background: var(--ggsi-accent-soft);
     color: var(--ggsi-accent);
 }
 
 /* Segmented control */
-#ggsi_settings .ggsi-segmented {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-segmented {
     display: flex;
     padding: 3px;
     border: 1px solid var(--ggsi-line);
@@ -400,74 +413,74 @@
     background: var(--ggsi-surface);
 }
 
-#ggsi_settings .ggsi-segmented button {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-segmented button {
     flex: 1;
     padding: 5px 8px;
     border-radius: 6px;
     text-align: center;
 }
 
-#ggsi_settings .ggsi-segmented button:hover {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-segmented button:hover {
     background: var(--ggsi-surface-hover);
 }
 
-#ggsi_settings .ggsi-segmented button.ggsi-active {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-segmented button.ggsi-active {
     background: var(--ggsi-accent);
     color: var(--SmartThemeBlurTintColor, #171717);
     font-weight: 600;
 }
 
 /* Advanced prompts */
-#ggsi_settings .ggsi-advanced summary {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-advanced summary {
     display: flex;
     align-items: center;
     list-style: none;
     cursor: pointer;
 }
 
-#ggsi_settings .ggsi-advanced summary::-webkit-details-marker {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-advanced summary::-webkit-details-marker {
     display: none;
 }
 
-#ggsi_settings .ggsi-advanced summary h4 {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-advanced summary h4 {
     flex: 1;
     margin: 0;
 }
 
-#ggsi_settings .ggsi-caret {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-caret {
     margin-left: 10px;
     color: var(--ggsi-muted);
     transition: transform 0.2s;
 }
 
-#ggsi_settings .ggsi-advanced[open] .ggsi-caret {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-advanced[open] .ggsi-caret {
     transform: rotate(180deg);
 }
 
-#ggsi_settings .ggsi-advanced[open] summary {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-advanced[open] summary {
     margin-bottom: 8px;
 }
 
-#ggsi_settings .ggsi-help code {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-help code {
     padding: 0 4px;
     border-radius: 4px;
     background: var(--ggsi-surface-hover);
 }
 
-#ggsi_settings .ggsi-template {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-template {
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-top: 10px;
 }
 
-#ggsi_settings .ggsi-template-head {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-template-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-#ggsi_settings .ggsi-ghost {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-ghost {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -476,14 +489,183 @@
     color: var(--ggsi-muted);
 }
 
-#ggsi_settings .ggsi-ghost:hover {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-ghost:hover {
     color: var(--ggsi-fg);
 }
 
-#ggsi_settings .ggsi-code {
+:is(#ggsi_settings, .ggsi-correct) .ggsi-code {
     margin: 0;
     font-family: var(--monoFontFamily, ui-monospace, monospace);
     font-size: 0.85em;
     line-height: 1.45;
     resize: vertical;
+}
+
+/* --- Corrections dialog ------------------------------------------------ */
+
+.ggsi-correct {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+.ggsi-correct-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 1.15em;
+    font-weight: 600;
+}
+
+.ggsi-correct-title i {
+    color: var(--ggsi-accent);
+}
+
+.ggsi-correct .ggsi-msg-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border: 1px solid var(--ggsi-line);
+    border-radius: var(--ggsi-radius);
+    background: var(--ggsi-surface);
+}
+
+.ggsi-correct .ggsi-msg-meta {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.ggsi-correct .ggsi-msg-name {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    color: var(--ggsi-accent);
+}
+
+.ggsi-correct .ggsi-msg-name.ggsi-is-user {
+    color: var(--ggsi-fg);
+}
+
+.ggsi-correct .ggsi-msg-pos,
+.ggsi-correct .ggsi-swipe-pos {
+    color: var(--ggsi-muted);
+}
+
+.ggsi-correct .ggsi-nav-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s, opacity 0.15s;
+}
+
+.ggsi-correct .ggsi-nav-btn:hover:not(:disabled) {
+    background: var(--ggsi-surface-hover);
+    color: var(--ggsi-accent);
+}
+
+.ggsi-correct button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.ggsi-correct .ggsi-swipe-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: -4px;
+}
+
+.ggsi-correct .ggsi-swipe-nav[hidden] {
+    display: none;
+}
+
+.ggsi-correct .ggsi-msg-text {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    max-height: 40vh;
+    line-height: 1.5;
+    resize: vertical;
+    cursor: text;
+}
+
+.ggsi-correct .ggsi-msg-text::selection {
+    background: color-mix(in srgb, var(--ggsi-accent) 45%, transparent);
+}
+
+.ggsi-correct .ggsi-selection {
+    min-height: 1.6em;
+    font-size: 0.88em;
+    color: var(--ggsi-muted);
+}
+
+.ggsi-correct .ggsi-selection-active,
+.ggsi-correct.ggsi-has-selection .ggsi-selection-hint {
+    display: none;
+}
+
+.ggsi-correct.ggsi-has-selection .ggsi-selection-active {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 4px 4px 10px;
+    border-radius: 8px;
+    background: var(--ggsi-accent-soft);
+    color: var(--ggsi-fg);
+}
+
+.ggsi-correct .ggsi-selection-active > i {
+    color: var(--ggsi-accent);
+}
+
+.ggsi-correct .ggsi-selection-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-style: italic;
+}
+
+.ggsi-correct .ggsi-field-label {
+    font-weight: 600;
+}
+
+.ggsi-correct .ggsi-instruction {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.ggsi-correct .ggsi-quick {
+    flex-wrap: wrap;
+    margin-top: -2px;
+}
+
+.ggsi-correct .ggsi-correct-history {
+    padding: 8px 2px 2px;
+}
+
+.ggsi-correct .ggsi-outcome {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.85em;
+    color: var(--ggsi-muted);
 }

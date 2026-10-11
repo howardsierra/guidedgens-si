@@ -90,3 +90,26 @@ export function cleanImpersonation(text, userName, otherNames = []) {
 export function formatSamples(samples) {
     return samples.map(line => `- "${line}"`).join('\n');
 }
+
+/**
+ * Removes wrapping the model sometimes adds around a rewrite: code fences,
+ * triple quotes, a "Name:" prefix, or quotes the original didn't have.
+ */
+export function cleanRewrite(text, original = '', speaker = '') {
+    let out = String(text ?? '').trim();
+    const fenced = out.match(/^```[^\n]*\n([\s\S]*?)\n?```$/);
+    if (fenced) out = fenced[1].trim();
+    out = out.replace(/^"""\s*/, '').replace(/\s*"""$/, '').trim();
+    if (speaker) out = out.replace(new RegExp(`^${escapeRegex(speaker)}\\s*:\\s*`, 'i'), '');
+    const source = String(original).trim();
+    if (/^"[^"]*"$/.test(out) && !source.startsWith('"')) out = out.slice(1, -1).trim();
+    return out;
+}
+
+/** Splices `replacement` over [start, end), keeping the selection's outer whitespace. */
+export function replaceRange(text, start, end, replacement) {
+    const selected = text.slice(start, end);
+    const lead = selected.match(/^\s*/)[0];
+    const trail = selected.slice(lead.length).match(/\s*$/)[0];
+    return text.slice(0, start) + lead + replacement + trail + text.slice(end);
+}

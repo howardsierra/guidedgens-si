@@ -43,3 +43,19 @@ test('cleanImpersonation strips the user prefix and cuts other speakers', () => 
     assert.equal(cleanImpersonation('Mara waves.\n**Bob:** hi', 'Mara', ['Bob']), 'Mara waves.');
     assert.equal(cleanImpersonation('Mara tells Bob: "go."', 'Mara', ['Bob']), 'Mara tells Bob: "go."');
 });
+
+test('cleanRewrite strips wrapping the original did not have', async () => {
+    const { cleanRewrite } = await import('../src/text.js');
+    assert.equal(cleanRewrite('```\nShe sighs.\n```', 'She smiles.'), 'She sighs.');
+    assert.equal(cleanRewrite('"""\nShe sighs.\n"""', 'She smiles.'), 'She sighs.');
+    assert.equal(cleanRewrite('Seraphina: She sighs.', 'x', 'Seraphina'), 'She sighs.');
+    assert.equal(cleanRewrite('"She sighs."', 'She smiles.'), 'She sighs.');
+    assert.equal(cleanRewrite('"Go away."', '"Hello."'), '"Go away."');
+    assert.equal(cleanRewrite('"Go," she said, "now."', 'x'), '"Go," she said, "now."');
+});
+
+test('replaceRange keeps the selection whitespace', async () => {
+    const { replaceRange } = await import('../src/text.js');
+    const text = 'One. Two three. Four.';
+    assert.equal(replaceRange(text, 4, 16, 'Changed.'), 'One. Changed. Four.');
+});
