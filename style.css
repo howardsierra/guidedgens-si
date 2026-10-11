@@ -1,32 +1,489 @@
+/* Guided Gens SI. Every colour is derived from the active SillyTavern theme. */
+
+#ggsi_bar,
+#ggsi_settings {
+    --ggsi-fg: var(--SmartThemeBodyColor, #dcdcd2);
+    --ggsi-accent: var(--SmartThemeQuoteColor, #e18a24);
+    --ggsi-border: var(--SmartThemeBorderColor, rgba(0, 0, 0, 0.5));
+    --ggsi-muted: color-mix(in srgb, var(--ggsi-fg) 62%, transparent);
+    --ggsi-surface: color-mix(in srgb, var(--ggsi-fg) 5%, transparent);
+    --ggsi-surface-hover: color-mix(in srgb, var(--ggsi-fg) 11%, transparent);
+    --ggsi-accent-soft: color-mix(in srgb, var(--ggsi-accent) 18%, transparent);
+    --ggsi-line: color-mix(in srgb, var(--ggsi-fg) 14%, transparent);
+    --ggsi-radius: 10px;
+}
+
+/* --- Action bar -------------------------------------------------------- */
+
 #ggsi_bar {
     display: flex;
-    gap: 6px;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    padding: 4px 6px;
     box-sizing: border-box;
+    padding: 5px 6px 3px;
 }
 
-.ggsi-button {
-    padding: 6px 9px;
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 5px;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.15s, background-color 0.15s;
+#ggsi_bar[hidden] {
+    display: none;
 }
 
-.ggsi-button:hover,
-.ggsi-button:focus-visible {
+#ggsi_bar .ggsi-status {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.85em;
+    font-style: italic;
+    color: var(--ggsi-muted);
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+#ggsi_bar .ggsi-status.ggsi-visible {
     opacity: 1;
-    background-color: var(--white30a);
+    transform: none;
 }
 
-.ggsi-settings h4 {
-    margin: 10px 0 4px;
+#ggsi_bar .ggsi-group {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--ggsi-line);
+    border-radius: 999px;
+    background: var(--ggsi-surface);
+    backdrop-filter: blur(var(--SmartThemeBlurStrength, 0px));
 }
 
-.ggsi-settings .menu_button {
-    width: fit-content;
-    margin: 4px 0 8px;
+#ggsi_bar .ggsi-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    padding: 0 13px;
+    border-radius: 999px;
+    color: var(--ggsi-fg);
+    font-size: 0.88em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s, color 0.15s, opacity 0.2s, transform 0.1s;
+}
+
+#ggsi_bar .ggsi-btn .ggsi-icon {
+    font-size: 0.95em;
+    opacity: 0.85;
+    transition: transform 0.2s, color 0.15s;
+}
+
+#ggsi_bar .ggsi-btn:hover {
+    background: var(--ggsi-surface-hover);
+}
+
+#ggsi_bar .ggsi-btn:hover .ggsi-icon {
+    color: var(--ggsi-accent);
+    opacity: 1;
+}
+
+#ggsi_bar .ggsi-btn:active {
+    transform: scale(0.96);
+}
+
+#ggsi_bar .ggsi-btn:focus-visible {
+    outline: 2px solid var(--ggsi-accent);
+    outline-offset: 1px;
+}
+
+#ggsi_bar .ggsi-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Running: accent pill with a spinning icon. */
+#ggsi_bar .ggsi-btn.ggsi-running {
+    background: var(--ggsi-accent-soft);
+    color: var(--ggsi-accent);
+    cursor: progress;
+}
+
+#ggsi_bar .ggsi-btn.ggsi-running .ggsi-icon {
+    color: var(--ggsi-accent);
+    opacity: 1;
+}
+
+#ggsi_bar .ggsi-btn.ggsi-running .ggsi-icon::before {
+    content: "\f110"; /* fa-spinner */
+}
+
+#ggsi_bar .ggsi-btn.ggsi-running .ggsi-icon {
+    animation: ggsi-spin 0.9s linear infinite;
+}
+
+/* Impersonate result sitting in the box: the button becomes "Outline". */
+#ggsi_bar .ggsi-btn.ggsi-undo {
+    color: var(--ggsi-accent);
+}
+
+#ggsi_bar .ggsi-btn.ggsi-undo .ggsi-icon {
+    color: var(--ggsi-accent);
+    opacity: 1;
+}
+
+/* Compact: icons only. */
+#ggsi_bar.ggsi-compact .ggsi-label {
+    display: none;
+}
+
+#ggsi_bar.ggsi-compact .ggsi-btn {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+}
+
+@media (max-width: 600px) {
+    #ggsi_bar .ggsi-label {
+        display: none;
+    }
+
+    #ggsi_bar .ggsi-btn {
+        width: 36px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+
+@keyframes ggsi-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #ggsi_bar .ggsi-btn.ggsi-running .ggsi-icon {
+        animation-duration: 2.5s;
+    }
+
+    #ggsi_bar .ggsi-status,
+    #ggsi_bar .ggsi-btn {
+        transition: none;
+    }
+}
+
+/* --- Settings panel ---------------------------------------------------- */
+
+#ggsi_settings .inline-drawer-header b i {
+    margin-right: 4px;
+    color: var(--ggsi-accent);
+}
+
+#ggsi_settings .ggsi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 6px;
+}
+
+#ggsi_settings .ggsi-intro,
+#ggsi_settings .ggsi-help {
+    margin: 0;
+    font-size: 0.88em;
+    color: var(--ggsi-muted);
+    line-height: 1.45;
+}
+
+#ggsi_settings .ggsi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--ggsi-line);
+    border-radius: var(--ggsi-radius);
+    background: var(--ggsi-surface);
+}
+
+#ggsi_settings .ggsi-card h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    font-size: 0.95em;
+}
+
+#ggsi_settings .ggsi-card h4 > i {
+    width: 1.1em;
+    text-align: center;
+    color: var(--ggsi-accent);
+}
+
+#ggsi_settings .ggsi-card h4 small {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--ggsi-surface-hover);
+    color: var(--ggsi-muted);
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+#ggsi_settings .ggsi-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 2px;
+    border-top: 1px solid var(--ggsi-line);
+}
+
+#ggsi_settings .ggsi-card h4 + .ggsi-row {
+    border-top: none;
+}
+
+#ggsi_settings .ggsi-toggle-row {
+    cursor: pointer;
+}
+
+#ggsi_settings .ggsi-stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+#ggsi_settings .ggsi-row-icon {
+    width: 1.2em;
+    text-align: center;
+    color: var(--ggsi-muted);
+}
+
+#ggsi_settings .ggsi-row-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+#ggsi_settings .ggsi-row-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+#ggsi_settings .ggsi-row-text small {
+    color: var(--ggsi-muted);
+    line-height: 1.35;
+}
+
+#ggsi_settings .ggsi-value {
+    margin-left: auto;
+    min-width: 2.2em;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--ggsi-accent-soft);
+    color: var(--ggsi-accent);
+    font-size: 0.85em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+/* Switch */
+#ggsi_settings .ggsi-switch {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 20px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--ggsi-surface-hover);
+    border: 1px solid var(--ggsi-line);
+    cursor: pointer;
+    transition: background-color 0.18s, border-color 0.18s;
+}
+
+#ggsi_settings .ggsi-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ggsi-fg);
+    opacity: 0.75;
+    transition: transform 0.18s, opacity 0.18s;
+}
+
+#ggsi_settings .ggsi-switch:checked {
+    background: var(--ggsi-accent);
+    border-color: var(--ggsi-accent);
+}
+
+#ggsi_settings .ggsi-switch:checked::after {
+    transform: translateX(16px);
+    opacity: 1;
+}
+
+#ggsi_settings .ggsi-switch:focus-visible,
+#ggsi_settings .ggsi-range:focus-visible,
+#ggsi_settings button:focus-visible {
+    outline: 2px solid var(--ggsi-accent);
+    outline-offset: 2px;
+}
+
+/* Slider */
+#ggsi_settings .ggsi-range {
+    width: 100%;
+    margin: 2px 0;
+    accent-color: var(--ggsi-accent);
+    cursor: pointer;
+}
+
+/* Pronoun chips */
+#ggsi_settings .ggsi-pronouns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+#ggsi_settings .ggsi-pronouns .text_pole {
+    flex: 1 1 140px;
+    margin: 0;
+}
+
+#ggsi_settings .ggsi-chips {
+    display: flex;
+    gap: 6px;
+}
+
+#ggsi_settings .ggsi-chip,
+#ggsi_settings .ggsi-ghost,
+#ggsi_settings .ggsi-segmented button {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+#ggsi_settings .ggsi-chip {
+    padding: 3px 10px;
+    border: 1px solid var(--ggsi-line);
+    border-radius: 999px;
+}
+
+#ggsi_settings .ggsi-chip:hover,
+#ggsi_settings .ggsi-ghost:hover {
+    background: var(--ggsi-surface-hover);
+}
+
+#ggsi_settings .ggsi-chip.ggsi-active {
+    border-color: var(--ggsi-accent);
+    background: var(--ggsi-accent-soft);
+    color: var(--ggsi-accent);
+}
+
+/* Segmented control */
+#ggsi_settings .ggsi-segmented {
+    display: flex;
+    padding: 3px;
+    border: 1px solid var(--ggsi-line);
+    border-radius: 8px;
+    background: var(--ggsi-surface);
+}
+
+#ggsi_settings .ggsi-segmented button {
+    flex: 1;
+    padding: 5px 8px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+#ggsi_settings .ggsi-segmented button:hover {
+    background: var(--ggsi-surface-hover);
+}
+
+#ggsi_settings .ggsi-segmented button.ggsi-active {
+    background: var(--ggsi-accent);
+    color: var(--SmartThemeBlurTintColor, #171717);
+    font-weight: 600;
+}
+
+/* Advanced prompts */
+#ggsi_settings .ggsi-advanced summary {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    cursor: pointer;
+}
+
+#ggsi_settings .ggsi-advanced summary::-webkit-details-marker {
+    display: none;
+}
+
+#ggsi_settings .ggsi-advanced summary h4 {
+    flex: 1;
+    margin: 0;
+}
+
+#ggsi_settings .ggsi-caret {
+    margin-left: 10px;
+    color: var(--ggsi-muted);
+    transition: transform 0.2s;
+}
+
+#ggsi_settings .ggsi-advanced[open] .ggsi-caret {
+    transform: rotate(180deg);
+}
+
+#ggsi_settings .ggsi-advanced[open] summary {
+    margin-bottom: 8px;
+}
+
+#ggsi_settings .ggsi-help code {
+    padding: 0 4px;
+    border-radius: 4px;
+    background: var(--ggsi-surface-hover);
+}
+
+#ggsi_settings .ggsi-template {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+#ggsi_settings .ggsi-template-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#ggsi_settings .ggsi-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    color: var(--ggsi-muted);
+}
+
+#ggsi_settings .ggsi-ghost:hover {
+    color: var(--ggsi-fg);
+}
+
+#ggsi_settings .ggsi-code {
+    margin: 0;
+    font-family: var(--monoFontFamily, ui-monospace, monospace);
+    font-size: 0.85em;
+    line-height: 1.45;
+    resize: vertical;
 }

@@ -4,11 +4,18 @@ A small, focused SillyTavern extension based on the idea behind
 [Guided Generations](https://github.com/Samueras/GuidedGenerations-Extension) by Samueras.
 It has only three buttons, and they're built to stay in character.
 
+![The Guided Gens SI button bar above the chat input](docs/bar.png)
+
 | Button | What it does |
 | --- | --- |
-| <i class="fa-solid fa-user-pen"></i> **Guided Impersonate** | Turns the outline in your input box into **your persona's** next message, always in **third person**. Click again (before editing) to get your outline back. |
-| <i class="fa-solid fa-comment-dots"></i> **Guided Response** | The character replies following the direction in your input box, **in their own voice**. |
-| <i class="fa-solid fa-arrows-rotate"></i> **Guided Swipe** | A new swipe of the character's last message, following your direction, **in their own voice**. Leave the box empty for a plain swipe. |
+| **Impersonate** | Turns the outline in your input box into **your persona's** next message, always in **third person**. Afterwards the button becomes **Outline**: click it to get your outline back. |
+| **Respond** | The character replies following the direction in your input box, **in their own voice**. |
+| **Swipe** | A new swipe of the character's last message, following your direction, **in their own voice**. Leave the box empty for a plain swipe. |
+
+While one runs, it shows a spinner and a short status, and the other buttons are locked so you can't start two generations at once. On narrow screens (or with **Compact** on) the bar shows icons only.
+
+![Busy state](docs/bar-busy.png)
+![After impersonating, the button offers your outline back](docs/bar-outline.png)
 
 ## How it differs from the original
 
@@ -34,12 +41,21 @@ Requires a recent SillyTavern (1.13.0+ for Guided Swipe). It can run alongside t
 
 ## Settings
 
-- **Pronouns**: your persona's pronouns, used in the third-person rule.
-- **Repeat the persona description**: re-states your persona right next to the instruction (on by default; turn it off to save tokens).
-- **Retry on first-person slip**: one automatic retry if the narration uses I/me/my.
-- **Voice samples**: how many spoken lines to quote for you / the character (0 turns this off).
-- **Direction depth / role**: where the author's note goes in the chat (default: system, after the last message).
-- **Prompts**: both prompts can be edited; *Reset* restores the defaults.
+Under **Extensions → Guided Gens SI**. Everything follows your SillyTavern theme colours.
+
+<img src="docs/settings.png" alt="Settings panel" width="320">
+
+- **Buttons**: show or hide each button; **Compact** for icons only.
+- **Your persona**
+  - **Pronouns**: type them or tap a chip (she/her, he/him, they/them). They're used in the third-person rule.
+  - **Restate persona**: repeats your persona description right next to the instruction (turn it off to save tokens).
+  - **Fix point of view**: one automatic retry if the narration uses I/me/my.
+  - **Voice samples**: how many of your spoken lines to quote (0 = off).
+- **Character**
+  - **Voice samples**: how many of the character's recent lines to quote (0 = off).
+  - **Direction depth**: where the author's note goes in the chat (0 = after the last message).
+  - **Direction role**: System, User or Assistant.
+- **Prompts (Advanced)**: edit both prompts; **Reset** restores the defaults.
 
 ## Tips
 

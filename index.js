@@ -13,6 +13,7 @@ import {
     IMPERSONATE_DIRECTION_WITH_INPUT,
     POV_RETRY_NOTE,
 } from './src/prompts.js';
+import { mountSettings, renderBar, setBusy, setImpersonateUndo, setStatus } from './src/ui.js';
 
 const MODULE = 'guidedgens_si';
 const LOG = '[Guided Gens SI]';
@@ -26,6 +27,7 @@ const DEFAULTS = Object.freeze({
     showImpersonate: true,
     showResponse: true,
     showSwipe: true,
+    compactButtons: false,
     userPronouns: '',
     includePersona: true,
     userVoiceSamples: 5,
@@ -45,7 +47,11 @@ const ctx = () => SillyTavern.getContext();
 
 function settings() {
     const all = ctx().extensionSettings;
-    all[MODULE] = Object.assign({}, DEFAULTS, all[MODULE]);
+    // Fill in missing keys in place; replacing the object would orphan the one the settings panel edits.
+    all[MODULE] ??= {};
+    for (const [key, value] of Object.entries(DEFAULTS)) {
+        if (!(key in all[MODULE])) all[MODULE][key] = value;
+    }
     return all[MODULE];
 }
 
@@ -72,12 +78,13 @@ function notify(type, message) {
     else console[type === 'error' ? 'error' : 'log'](LOG, message);
 }
 
-async function exclusive(fn) {
+async function exclusive(buttonId, fn) {
     if (busy) {
         notify('info', 'Already generating, please wait.');
         return;
     }
     busy = true;
+    setBusy(buttonId);
     try {
         await fn();
     } catch (error) {
@@ -85,7 +92,13 @@ async function exclusive(fn) {
         notify('error', error?.message ?? String(error));
     } finally {
         busy = false;
+        setBusy(null);
+        syncImpersonateButton();
     }
+}
+
+function syncImpersonateButton() {
+    setImpersonateUndo(!!lastImpersonation && textarea()?.value === lastImpersonation);
 }
 
 // --- Impersonate (third person) ---------------------------------------------
@@ -152,16 +165,18 @@ async function guidedImpersonate() {
     if (lastImpersonation && current === lastImpersonation) {
         setInput(outlineBeforeImpersonation);
         lastImpersonation = '';
+        syncImpersonateButton();
         return;
     }
 
-    await exclusive(async () => {
+    await exclusive('ggsi_impersonate', async () => {
         outlineBeforeImpersonation = current;
         try {
             let result = await runImpersonation(buildImpersonatePrompt(current));
 
             if (result && settings().povRetry && hasPovSlip(result)) {
                 console.info(LOG, 'Impersonation slipped into first person; retrying once.');
+                setStatus('Fixing point of view…');
                 const retry = await runImpersonation(buildImpersonatePrompt(current, { retry: true }));
                 if (retry && countFirstPerson(retry) < countFirstPerson(result)) result = retry;
                 if (hasPovSlip(result)) {
@@ -220,7 +235,7 @@ function clearGuide() {
 }
 
 async function guidedResponse() {
-    await exclusive(async () => {
+    await exclusive('ggsi_response', async () => {
         const c = ctx();
         const input = textarea().value;
         // In a group we don't know who will answer, so only anchor the voice in 1:1 chats.
@@ -253,7 +268,7 @@ async function swipeToNew() {
 }
 
 async function guidedSwipe() {
-    await exclusive(async () => {
+    await exclusive('ggsi_swipe', async () => {
         const c = ctx();
         const last = c.chat.at(-1);
         if (!last || last.is_user || last.is_system) {
@@ -277,135 +292,46 @@ async function guidedSwipe() {
 // --- UI ---------------------------------------------------------------------
 
 const BUTTONS = [
-    { id: 'ggsi_impersonate', setting: 'showImpersonate', icon: 'fa-user-pen', title: 'Guided Impersonate (third person): turn your outline into your persona\'s message. Click again to get the outline back.', action: guidedImpersonate },
-    { id: 'ggsi_response', setting: 'showResponse', icon: 'fa-comment-dots', title: 'Guided Response: the character replies following your direction, in their own voice.', action: guidedResponse },
-    { id: 'ggsi_swipe', setting: 'showSwipe', icon: 'fa-arrows-rotate', title: 'Guided Swipe: a new swipe of the character\'s last message, following your direction.', action: guidedSwipe },
+    {
+        id: 'ggsi_impersonate', setting: 'showImpersonate', icon: 'fa-user-pen', label: 'Impersonate',
+        hint: 'Turn your outline into your persona\'s message, in third person. Click again to get the outline back.',
+        busyText: 'Writing as you…', action: guidedImpersonate,
+    },
+    {
+        id: 'ggsi_response', setting: 'showResponse', icon: 'fa-comment-dots', label: 'Respond',
+        hint: 'The character replies following your direction, in their own voice.',
+        busyText: 'Character is replying…', action: guidedResponse,
+    },
+    {
+        id: 'ggsi_swipe', setting: 'showSwipe', icon: 'fa-arrows-rotate', label: 'Swipe',
+        hint: 'A new swipe of the character\'s last message, following your direction. Empty box = plain swipe.',
+        busyText: 'Rewriting the reply…', action: guidedSwipe,
+    },
 ];
-
-function renderButtons() {
-    const anchor = document.getElementById('nonQRFormItems');
-    if (!anchor) {
-        console.error(LOG, 'Could not find #nonQRFormItems; buttons not added.');
-        return;
-    }
-    let bar = document.getElementById('ggsi_bar');
-    if (!bar) {
-        bar = document.createElement('div');
-        bar.id = 'ggsi_bar';
-        anchor.parentNode.insertBefore(bar, anchor.nextSibling);
-    }
-    bar.innerHTML = '';
-    const s = settings();
-    for (const button of BUTTONS) {
-        if (!s[button.setting]) continue;
-        const el = document.createElement('div');
-        el.id = button.id;
-        el.className = `ggsi-button fa-solid ${button.icon} interactable`;
-        el.title = button.title;
-        el.tabIndex = 0;
-        el.addEventListener('click', () => button.action());
-        bar.appendChild(el);
-    }
-    bar.style.display = bar.childElementCount ? '' : 'none';
-}
-
-function settingsHtml() {
-    return `
-<div id="ggsi_settings" class="ggsi-settings">
-  <div class="inline-drawer">
-    <div class="inline-drawer-toggle inline-drawer-header">
-      <b>Guided Gens SI</b>
-      <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
-    </div>
-    <div class="inline-drawer-content">
-      <h4>Buttons</h4>
-      <label class="checkbox_label"><input type="checkbox" data-ggsi="showImpersonate"> Guided Impersonate</label>
-      <label class="checkbox_label"><input type="checkbox" data-ggsi="showResponse"> Guided Response</label>
-      <label class="checkbox_label"><input type="checkbox" data-ggsi="showSwipe"> Guided Swipe</label>
-
-      <h4>Impersonate ({{user}})</h4>
-      <label for="ggsi_pronouns">{{user}}'s pronouns (e.g. "she/her"; blank = use the persona)</label>
-      <input id="ggsi_pronouns" class="text_pole" type="text" data-ggsi="userPronouns" placeholder="they/them">
-      <label class="checkbox_label"><input type="checkbox" data-ggsi="includePersona"> Repeat the persona description in the prompt</label>
-      <label class="checkbox_label"><input type="checkbox" data-ggsi="povRetry"> Retry once if the result slips into first person</label>
-      <label for="ggsi_uvs">{{user}} voice samples (lines of dialogue from your past messages)</label>
-      <input id="ggsi_uvs" class="text_pole" type="number" min="0" max="15" data-ggsi="userVoiceSamples">
-
-      <h4>Response / Swipe ({{char}})</h4>
-      <label for="ggsi_cvs">{{char}} voice samples (lines of dialogue from their past messages)</label>
-      <input id="ggsi_cvs" class="text_pole" type="number" min="0" max="15" data-ggsi="charVoiceSamples">
-      <label for="ggsi_depth">Direction depth (0 = after the last message)</label>
-      <input id="ggsi_depth" class="text_pole" type="number" min="0" max="10" data-ggsi="guideDepth">
-      <label for="ggsi_role">Direction role</label>
-      <select id="ggsi_role" class="text_pole" data-ggsi="guideRole">
-        <option value="system">System</option>
-        <option value="user">User</option>
-        <option value="assistant">Assistant</option>
-      </select>
-
-      <h4>Prompts</h4>
-      <small>Placeholders: <code>{{input}}</code>, <code>{{direction}}</code>, <code>{{persona}}</code>, <code>{{voice}}</code>, <code>{{pronouns}}</code>. Normal macros like <code>{{user}}</code> and <code>{{char}}</code> also work.</small>
-      <label for="ggsi_imp_tpl">Impersonate prompt</label>
-      <textarea id="ggsi_imp_tpl" class="text_pole textarea_compact" rows="8" data-ggsi-template="impersonateTemplate"></textarea>
-      <div class="menu_button" data-ggsi-reset="impersonateTemplate">Reset impersonate prompt</div>
-      <label for="ggsi_guide_tpl">Response / swipe direction</label>
-      <textarea id="ggsi_guide_tpl" class="text_pole textarea_compact" rows="8" data-ggsi-template="guideTemplate"></textarea>
-      <div class="menu_button" data-ggsi-reset="guideTemplate">Reset direction prompt</div>
-    </div>
-  </div>
-</div>`;
-}
 
 const TEMPLATE_DEFAULTS = { impersonateTemplate: DEFAULT_IMPERSONATE, guideTemplate: DEFAULT_GUIDE };
 
-function mountSettings() {
-    const host = document.getElementById('extensions_settings2') ?? document.getElementById('extensions_settings');
-    if (!host) return;
-    host.insertAdjacentHTML('beforeend', settingsHtml());
-    const root = document.getElementById('ggsi_settings');
-    const s = settings();
-
-    for (const el of root.querySelectorAll('[data-ggsi]')) {
-        const key = el.dataset.ggsi;
-        if (el.type === 'checkbox') el.checked = !!s[key];
-        else el.value = s[key];
-        el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => {
-            s[key] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? Number(el.value) : el.value;
-            save();
-            if (key.startsWith('show')) renderButtons();
-        });
-    }
-
-    for (const el of root.querySelectorAll('[data-ggsi-template]')) {
-        const key = el.dataset.ggsiTemplate;
-        el.value = s[key] || TEMPLATE_DEFAULTS[key];
-        el.addEventListener('input', () => {
-            // Store blank when unchanged so future default improvements still apply.
-            s[key] = el.value === TEMPLATE_DEFAULTS[key] ? '' : el.value;
-            save();
-        });
-    }
-
-    for (const el of root.querySelectorAll('[data-ggsi-reset]')) {
-        const key = el.dataset.ggsiReset;
-        el.addEventListener('click', () => {
-            s[key] = '';
-            root.querySelector(`[data-ggsi-template="${key}"]`).value = TEMPLATE_DEFAULTS[key];
-            save();
-        });
-    }
-}
-
 function init() {
-    settings();
-    mountSettings();
-    renderButtons();
+    const s = settings();
+    mountSettings(s, {
+        save,
+        templateDefaults: TEMPLATE_DEFAULTS,
+        onChange: key => {
+            if (key.startsWith('show') || key === 'compactButtons') {
+                renderBar(BUTTONS, s);
+                syncImpersonateButton();
+            }
+        },
+    });
+    renderBar(BUTTONS, s);
+    textarea()?.addEventListener('input', syncImpersonateButton);
 
     const { eventSource, event_types } = ctx();
     eventSource.on(event_types.CHAT_CHANGED, () => {
         lastImpersonation = '';
         outlineBeforeImpersonation = '';
         clearGuide();
+        syncImpersonateButton();
     });
 }
 
