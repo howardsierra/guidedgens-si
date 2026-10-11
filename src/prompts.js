@@ -4,25 +4,31 @@
 
 export const DEFAULT_IMPERSONATE = `[Out of character: write {{user}}'s next message in the story. For this one message you are writing as {{user}}, not as {{char}}.
 {{persona}}{{voice}}
-{{direction}}
-
 Rules:
 - Third person only. Narrate {{user}} by name or as {{pronouns}}. Never use "I/me/my" or "you/your" for {{user}} in narration; first person is allowed only inside {{user}}'s spoken dialogue.
-- Write only what {{user}} says, does, thinks and feels. Do not write {{char}}'s (or anyone else's) dialogue, actions, reactions or decisions. Stop at a natural point where {{char}} would respond.
-- Sound like {{user}}: their personality, attitude, vocabulary and way of speaking, as shown in their persona and their lines so far. Keep {{user}} consistent with what they know and want right now.
+- Write only {{user}}'s own words, actions, thoughts and feelings. Do not write {{char}}'s (or anyone else's) dialogue or decisions. If the direction below mentions what someone else does, write only {{user}}'s side of it.
+- Sound like {{user}}: their personality, attitude, vocabulary and way of speaking, as shown in their persona and their lines so far.
 - Match the story's tense and formatting conventions.
-- Reply with the message text only: no name prefix, notes or commentary.]`;
+- Reply with the message text only: no name prefix, notes or commentary.
 
-export const IMPERSONATE_DIRECTION_WITH_INPUT = `What {{user}} does next. Expand this into the full message, keeping every beat and its intent, without adding major new actions or events:
-{{input}}`;
+{{direction}}]`;
 
-export const IMPERSONATE_DIRECTION_EMPTY = `{{user}}'s next move is up to you: choose what they would most plausibly say and do right now, given the scene and their personality.`;
+export const IMPERSONATE_DIRECTION_WITH_INPUT = `MOST IMPORTANT: {{user}}'s message must carry out this direction from the player:
+"""
+{{input}}
+"""
+- Include every action, line of dialogue and detail it asks for, in its order, with its intent and tone. Don't skip, soften or replace any part of it, even if the story seems to be heading somewhere else.
+- It's shorthand and may say "I" or "me" for {{user}}; it always describes what {{user}} does. Turn it into {{user}}'s message in third person.
+- Lines in quotes are what {{user}} says: keep them as written.
+- Flesh it out with natural detail in {{user}}'s voice, but don't add major new actions or events.`;
+
+export const IMPERSONATE_DIRECTION_EMPTY = `{{user}}'s next move is up to you: choose what they would most plausibly say and do right now, given the scene and their personality. Stop at a natural point where {{char}} would respond.`;
 
 export const POV_RETRY_NOTE = `
-[Important: a previous draft slipped into first person. Every sentence of narration must refer to {{user}} in the third person ({{pronouns}} or their name), never "I", "me" or "my".]`;
+[Important: a previous draft slipped into first person. Every sentence of narration must refer to {{user}} in the third person ({{pronouns}} or their name), never "I", "me" or "my". Still carry out the player's direction exactly.]`;
 
 export const CHAR_RETRY_NOTE = `
-[Important: a previous draft was written as {{char}}. This message belongs to {{user}}. Write only what {{user}} says and does, narrated in third person, and do not continue {{char}}'s reply.]`;
+[Important: a previous draft was written as {{char}}. This message belongs to {{user}}. Write only what {{user}} says and does, narrated in third person, and do not continue {{char}}'s reply. Still carry out the player's direction exactly.]`;
 
 // Strict mode: a separate request where the model never plays {{char}}.
 export const STRICT_SYSTEM = `You are co-writing an interactive story with the user. Right now your only job is to write the next message for {{user}}, the user's character. You are not {{char}}, and you never write {{char}}'s (or anyone else's) words, actions or reactions; the other side of the story is written separately.

@@ -140,7 +140,9 @@ export function looksLikeCharReply(text, userName, charNames = []) {
     const userHits = countName(narration, userName);
     const charHits = names.reduce((sum, name) => sum + countName(narration, name), 0);
     if (userHits === 0 && names.some(startsWith)) return true;
-    if (userHits === 0 && charHits >= 3) return true;
+    // Lots of the character's name alone is normal when the user's message is about them
+    // ("She hugs Seraphina…"), so it only counts together with a "you".
+    if (userHits === 0 && charHits >= 3 && secondPerson >= 1) return true;
     return false;
 }
 

@@ -23,6 +23,7 @@ While one runs, it shows a spinner and a short status, and the other buttons are
 **Impersonate sounds like you, and only in third person**
 - The prompt gives the model your persona description plus a few lines you've actually spoken in this chat, so it copies how *you* talk instead of a generic voice.
 - It has strict rules: third-person narration only, only your persona's own words and actions, and nothing written for the character.
+- Your direction is the last and most emphasised part of the prompt, so it wins over the story's momentum. Write it however you like, even in first person (`I grab her wrist and say "Stop fussing." then I walk out`): it's turned into third person, every beat is kept in order, and lines in quotes are kept as written.
 - The result is checked. If the narration slips into "I/me/my", **or the result reads like the character's reply instead of yours**, it retries once automatically (you can turn this off). It also removes a leading `YourName:` and cuts off anything after the model starts a `CharName:` line.
 - Set your pronouns in the settings (e.g. `she/her`) so the model never has to guess.
 

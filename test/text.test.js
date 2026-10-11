@@ -72,6 +72,9 @@ test('looksLikeCharReply spots replies written as the character', async () => {
     assert.equal(looksLikeCharReply('She smiles at you and squeezes your hand.', 'Mara', chars), true);
     assert.equal(looksLikeCharReply('Seraphina sighs. "Fine."', 'Mara', chars), true);
     assert.equal(looksLikeCharReply('', 'Mara', chars), false);
+    // A message about the character, narrated with the user's pronouns, is still the user's.
+    assert.equal(looksLikeCharReply('She throws her arms around Seraphina. Seraphina stiffens, but she holds Seraphina tighter.', 'Mara', chars), false);
+    assert.equal(looksLikeCharReply('Seraphina tilts her head at you. Seraphina smiles. Seraphina waits.', 'Mara', chars), true);
 });
 
 test('buildTranscript keeps the newest messages within budget', async () => {
