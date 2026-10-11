@@ -46,7 +46,8 @@ Strict mode leaves out your preset's prompts (main prompt, jailbreak and so on).
 
 **Response and swipe sound like the character**
 - The original sent your text as a bare instruction (`[Take the following into special consideration…]`) right after the last message, so models often answered the note, or switched into an assistant voice.
-- This version sends it as a private author's note. The note says it describes *what happens*, not *how to word it*, and tells the model to keep the character's personality, speech patterns, formatting and length.
+- This version sends it as a private author's note that keeps the character's personality, speech patterns, formatting and length, and ends with your direction marked as the top priority: all of it must happen in this reply, in order, with quoted lines kept exactly. Shorthand works ("she pours me tea and says \"Drink. Now.\"": "I/me" is you, "she/he" is the character).
+- **Placement matters.** In Chat Completion, a note inside the chat history comes *before* your preset's post-history instructions ("write {{char}}'s next reply…"), which then override it. So by default the direction is sent as the very last message, after everything else, the same spot SillyTavern gives impersonation. (Text Completion has no post-history block, so it goes in at depth 0.)
 - It includes a few of the character's own recent lines as a voice anchor. For swipes, the message being replaced is left out.
 - The note goes in through SillyTavern's extension-prompt API rather than `/inject` slash commands, so `|` or other special characters in your text can't break it. It's always removed afterwards, even if generation fails or you press stop.
 
@@ -93,8 +94,9 @@ Under **Extensions → Guided Gens SI**. Everything follows your SillyTavern the
   - **Voice samples**: how many of your spoken lines to quote (0 = off).
 - **Character**
   - **Voice samples**: how many of the character's recent lines to quote (0 = off).
-  - **Direction depth**: where the author's note goes in the chat (0 = after the last message).
-  - **Direction role**: System, User or Assistant.
+  - **Direction at the very end** (on by default): the direction is the last thing the model reads, after your preset's post-history instructions. Chat Completion only.
+  - **Direction depth**: where the note goes in the chat when it isn't at the very end (0 = after the last message).
+  - **Direction role**: System, User or Assistant. At the very end, Assistant is sent as System, since a trailing assistant message would act as a prefill.
 - **Prompts (Advanced)**: edit the impersonate, direction and both correction prompts; **Reset** restores the defaults.
 
 ## Tips

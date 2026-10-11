@@ -47,6 +47,7 @@ const DEFAULTS = Object.freeze({
     strictPrefillName: false,
     guideDepth: 0,
     guideRole: 'system',
+    guideAtEnd: true,
     impersonateTemplate: '',
     guideTemplate: '',
     correctIncludeHistory: true,
@@ -198,7 +199,8 @@ async function runImpersonation(prompt) {
 
 // Strict mode is only possible with Chat Completion; Text Completion impersonation
 // already ends the prompt with "{{user}}:", which keeps the model on the user's side.
-const canUseStrict = () => ctx().mainApi === 'openai';
+const isChatCompletion = () => ctx().mainApi === 'openai';
+const canUseStrict = isChatCompletion;
 
 /** Character card, other names and world info, as reference for strict mode. */
 async function strictReference() {
@@ -358,13 +360,25 @@ function buildGuide(input, { speakerName = null, skipIndex = -1 } = {}) {
     return substitute(fillTemplate(guide, { char: speakerName ?? 'the character who replies' }));
 }
 
+// The direction waiting to be appended to the end of the next Chat Completion prompt.
+let pendingGuide = null;
+
 function setGuide(text) {
     const s = settings();
+    // In Chat Completion, an in-chat note sits before the preset's post-history instructions,
+    // which then override it. Appending it as the very last message (like impersonate's
+    // instruction) makes it win. Text Completion has no post-history block, so depth 0 is already last.
+    if (s.guideAtEnd && isChatCompletion()) {
+        // A trailing assistant message would act as a prefill, so the end only takes system or user.
+        pendingGuide = { role: s.guideRole === 'user' ? 'user' : 'system', content: text };
+        return;
+    }
     const depth = Math.max(0, Number(s.guideDepth) || 0);
     ctx().setExtensionPrompt(GUIDE_KEY, text, IN_CHAT, depth, false, ROLES[s.guideRole] ?? ROLES.system);
 }
 
 function clearGuide() {
+    pendingGuide = null;
     ctx().setExtensionPrompt(GUIDE_KEY, '', IN_CHAT, 0);
 }
 
@@ -473,6 +487,11 @@ function init() {
     textarea()?.addEventListener('input', syncImpersonateButton);
 
     const { eventSource, event_types } = ctx();
+    eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, data => {
+        if (!pendingGuide || data?.dryRun || !Array.isArray(data?.chat)) return;
+        data.chat.push({ ...pendingGuide });
+    });
+
     // SillyTavern's own stop button (or its Esc shortcut) also counts as aborting our run.
     eventSource.on(event_types.GENERATION_STOPPED, () => {
         if (busy) aborted = true;

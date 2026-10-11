@@ -182,9 +182,10 @@ function settingsHtml() {
       <section class="ggsi-card">
         <h4><i class="fa-solid fa-masks-theater"></i> Character <small>Respond &amp; Swipe</small></h4>
         ${slider('charVoiceSamples', 'Voice samples', 'Recent lines of theirs, quoted so they keep their voice.', 15)}
-        ${slider('guideDepth', 'Direction depth', 'Where the note sits in the chat. 0 = after the last message.', 10)}
+        ${toggle('guideAtEnd', 'Direction at the very end', 'Send your direction as the last thing the model reads, after your preset\'s post-history instructions, so it can\'t be overridden. Chat Completion only; Text Completion always uses depth 0.')}
+        ${slider('guideDepth', 'Direction depth', 'Where the note sits in the chat when it isn\'t at the very end. 0 = after the last message.', 10)}
         <div class="ggsi-row ggsi-stack">
-          <span class="ggsi-row-text"><span class="ggsi-row-title">Direction role</span><small>Who the note appears to come from.</small></span>
+          <span class="ggsi-row-text"><span class="ggsi-row-title">Direction role</span><small>Who the note appears to come from. At the very end, Assistant is sent as System.</small></span>
           <div class="ggsi-segmented" role="radiogroup" data-ggsi-segmented="guideRole">
             <button type="button" data-value="system">System</button>
             <button type="button" data-value="user">User</button>

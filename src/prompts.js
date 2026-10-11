@@ -41,10 +41,18 @@ export const STRICT_STORY = `Story so far (oldest first):
 
 `;
 
-export const DEFAULT_GUIDE = `[Author's note for {{char}}'s next reply. This is private direction: never mention, quote or reply to it.
-What should happen: {{input}}
+export const DEFAULT_GUIDE = `[Author's note for {{char}}'s next reply. Don't mention this note itself.
 {{voice}}
-Write it the way {{char}} would really do and say it. Stay fully in {{char}}'s voice (personality, attitude, speech patterns and vocabulary from their description and earlier replies) and keep the same narration style, formatting and length as {{char}}'s previous messages. Treat the direction as what happens, not as wording to copy. Do not speak, act or decide for {{user}}.]`;
+Write the reply the way {{char}} would really do and say it: stay in {{char}}'s voice (personality, attitude, speech patterns and vocabulary from their description and earlier replies) and keep the narration style, formatting and length of {{char}}'s previous messages. Don't speak, act or decide for {{user}} beyond what the direction below says.
+
+MOST IMPORTANT: this reply must carry out the player's direction:
+"""
+{{input}}
+"""
+- Make all of it happen in this reply, in its order, with its intent and tone. Don't skip, soften, delay or replace any part of it, even if the story seemed to be heading somewhere else.
+- It's shorthand: "I" or "me" means {{user}}; "she", "he" or "they" usually means {{char}}.
+- Keep any quoted lines exactly as written.
+- Show it through {{char}}'s own words and actions, in their voice.]`;
 
 // Corrections. {{speaker}}, {{instruction}}, {{message}}, {{selection}} and
 // {{about}} are filled by the extension.
