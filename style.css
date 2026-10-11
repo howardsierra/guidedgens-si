@@ -1,0 +1,32 @@
+#ggsi_bar {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+}
+
+.ggsi-button {
+    padding: 6px 9px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.15s, background-color 0.15s;
+}
+
+.ggsi-button:hover,
+.ggsi-button:focus-visible {
+    opacity: 1;
+    background-color: var(--white30a);
+}
+
+.ggsi-settings h4 {
+    margin: 10px 0 4px;
+}
+
+.ggsi-settings .menu_button {
+    width: fit-content;
+    margin: 4px 0 8px;
+}

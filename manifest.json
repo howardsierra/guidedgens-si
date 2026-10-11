@@ -1,0 +1,11 @@
+{
+    "display_name": "Guided Gens SI",
+    "loading_order": 101,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "howardsierra",
+    "version": "0.1.0",
+    "homePage": "https://github.com/howardsierra/guidedgens-si"
+}
