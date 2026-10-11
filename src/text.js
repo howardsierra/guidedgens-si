@@ -113,3 +113,60 @@ export function replaceRange(text, start, end, replacement) {
     const trail = selected.slice(lead.length).match(/\s*$/)[0];
     return text.slice(0, start) + lead + replacement + trail + text.slice(end);
 }
+
+function countName(text, name) {
+    if (!name) return 0;
+    return (text.match(new RegExp(`\\b${escapeRegex(name)}\\b`, 'gi')) ?? []).length;
+}
+
+/**
+ * Heuristic: does an impersonation read like {{char}}'s reply instead of
+ * {{user}}'s message? Looks at the narration only (dialogue removed).
+ */
+export function looksLikeCharReply(text, userName, charNames = []) {
+    const trimmed = String(text ?? '').trim();
+    if (!trimmed) return false;
+    const narration = stripDialogue(trimmed).replace(/[*_~]/g, ' ');
+    const opening = trimmed.replace(/^[\s*_"“'(]+/, '');
+    const startsWith = name => !!name && new RegExp(`^${escapeRegex(name)}\\b`, 'i').test(opening);
+
+    if (startsWith(userName)) return false;
+
+    // Character replies address the user as "you" in narration; a third-person user message doesn't.
+    const secondPerson = (narration.match(/\b(?:you|your|yours|yourself)\b/gi) ?? []).length;
+    if (secondPerson >= 2) return true;
+
+    const names = charNames.filter(n => n && n.toLowerCase() !== String(userName ?? '').toLowerCase());
+    const userHits = countName(narration, userName);
+    const charHits = names.reduce((sum, name) => sum + countName(narration, name), 0);
+    if (userHits === 0 && names.some(startsWith)) return true;
+    if (userHits === 0 && charHits >= 3) return true;
+    return false;
+}
+
+/**
+ * Takes chat messages newest-first until roughly `maxChars` is used and returns
+ * them oldest-first as "Name: text" lines. Hidden/system messages are skipped.
+ */
+export function buildTranscript(chat, maxChars) {
+    const lines = [];
+    let used = 0;
+    for (let i = chat.length - 1; i >= 0; i--) {
+        const message = chat[i];
+        if (!message || message.is_system || !message.mes) continue;
+        const line = `${message.name}: ${message.mes.trim()}`;
+        if (used + line.length > maxChars && lines.length) break;
+        lines.push(line);
+        used += line.length + 2;
+    }
+    return lines.reverse().join('\n\n');
+}
+
+/** Joins a prefill and the model's continuation without doubling the prefill. */
+export function joinPrefill(prefill, output) {
+    const out = String(output ?? '');
+    if (!prefill) return out.trim();
+    if (out.trimStart().toLowerCase().startsWith(prefill.toLowerCase())) return out.trim();
+    const glue = /^[\s,.;:!?'’-]/.test(out) ? '' : ' ';
+    return `${prefill}${glue}${out}`.trim();
+}

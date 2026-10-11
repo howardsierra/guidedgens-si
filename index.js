@@ -1,12 +1,16 @@
 import {
+    buildTranscript,
     cleanImpersonation,
     collectVoiceSamples,
     countFirstPerson,
     fillTemplate,
     formatSamples,
     hasPovSlip,
+    joinPrefill,
+    looksLikeCharReply,
 } from './src/text.js';
 import {
+    CHAR_RETRY_NOTE,
     DEFAULT_CORRECT,
     DEFAULT_CORRECT_SELECTION,
     DEFAULT_GUIDE,
@@ -14,6 +18,8 @@ import {
     IMPERSONATE_DIRECTION_EMPTY,
     IMPERSONATE_DIRECTION_WITH_INPUT,
     POV_RETRY_NOTE,
+    STRICT_STORY,
+    STRICT_SYSTEM,
 } from './src/prompts.js';
 import { openCorrections } from './src/corrections.js';
 import { mountSettings, renderBar, setBusy, setImpersonateUndo, setStatus } from './src/ui.js';
@@ -37,6 +43,8 @@ const DEFAULTS = Object.freeze({
     userVoiceSamples: 5,
     charVoiceSamples: 4,
     povRetry: true,
+    strictImpersonate: false,
+    strictPrefillName: false,
     guideDepth: 0,
     guideRole: 'system',
     impersonateTemplate: '',
@@ -110,7 +118,7 @@ function syncImpersonateButton() {
 
 // --- Impersonate (third person) ---------------------------------------------
 
-function buildImpersonatePrompt(input, { retry = false } = {}) {
+function buildImpersonatePrompt(input, { reason = null } = {}) {
     const s = settings();
     const c = ctx();
 
@@ -131,7 +139,8 @@ function buildImpersonatePrompt(input, { retry = false } = {}) {
         pronouns,
         input: input.trim(),
     });
-    if (retry) prompt += fillTemplate(POV_RETRY_NOTE, { pronouns });
+    if (reason === 'pov') prompt += fillTemplate(POV_RETRY_NOTE, { pronouns });
+    if (reason === 'char') prompt += CHAR_RETRY_NOTE;
 
     return substitute(prompt);
 }
@@ -165,6 +174,78 @@ async function runImpersonation(prompt) {
     return cleanImpersonation(textarea().value, c.name1, otherSpeakerNames());
 }
 
+// Strict mode is only possible with Chat Completion; Text Completion impersonation
+// already ends the prompt with "{{user}}:", which keeps the model on the user's side.
+const canUseStrict = () => ctx().mainApi === 'openai';
+
+/** Character card, other names and world info, as reference for strict mode. */
+async function strictReference() {
+    const c = ctx();
+    let fields = {};
+    try {
+        fields = c.getCharacterCardFields?.() ?? {};
+    } catch {
+        // Older SillyTavern: fall back to the raw card below.
+    }
+    const character = c.characters[c.characterId];
+    const description = fields.description ?? character?.description ?? '';
+    const personality = fields.personality ?? character?.personality ?? '';
+    const scenario = fields.scenario ?? character?.scenario ?? '';
+
+    const parts = [];
+    if (description.trim()) parts.push(`About ${c.name2} (reference only; never write as them):\n${description.trim()}`);
+    if (personality.trim()) parts.push(`${c.name2}'s personality: ${personality.trim()}`);
+    if (scenario.trim()) parts.push(`Scenario: ${scenario.trim()}`);
+    if (c.groupId) parts.push(`Other characters in the story: ${otherSpeakerNames().join(', ')}.`);
+
+    try {
+        const chatForWI = c.chat.filter(m => !m.is_system).map(m => `${m.name}: ${m.mes}`).reverse();
+        const wi = await c.getWorldInfoPrompt?.(chatForWI, c.maxContext, true, {
+            personaDescription: fields.persona ?? '',
+            characterDescription: description,
+            characterPersonality: personality,
+            characterDepthPrompt: '',
+            scenario,
+            creatorNotes: '',
+        });
+        if (wi?.worldInfoString?.trim()) parts.push(`World details:\n${wi.worldInfoString.trim()}`);
+    } catch (error) {
+        console.warn(LOG, 'World info skipped in strict mode', error);
+    }
+    return parts.length ? `\n${parts.join('\n\n')}\n` : '';
+}
+
+/** Impersonation from a separate request where the model never plays {{char}}. */
+async function runStrictImpersonation(prompt) {
+    const c = ctx();
+    const system = substitute(fillTemplate(STRICT_SYSTEM, { card: await strictReference() }));
+    const responseTokens = Number(c.chatCompletionSettings?.openai_max_tokens) || 500;
+    // About 3.2 characters per token, leaving room for the reply and the instructions.
+    const budget = Math.max(4000, ((Number(c.maxContext) || 8192) - responseTokens - 1000) * 3.2 - system.length - prompt.length);
+    const story = fillTemplate(STRICT_STORY, { transcript: buildTranscript(c.chat, budget) });
+    const prefill = settings().strictPrefillName ? c.name1 : '';
+
+    setInput('');
+    const output = await c.generateRaw({
+        prompt: [{ role: 'user', content: story + prompt }],
+        systemPrompt: system,
+        prefill,
+    });
+    return cleanImpersonation(joinPrefill(prefill, output), c.name1, otherSpeakerNames());
+}
+
+function impersonationSlip(text) {
+    if (!text) return null;
+    if (looksLikeCharReply(text, ctx().name1, otherSpeakerNames())) return 'char';
+    if (hasPovSlip(text)) return 'pov';
+    return null;
+}
+
+function slipScore(text) {
+    if (!text) return Infinity;
+    return (looksLikeCharReply(text, ctx().name1, otherSpeakerNames()) ? 100 : 0) + countFirstPerson(text);
+}
+
 async function guidedImpersonate() {
     const current = textarea().value;
 
@@ -178,17 +259,25 @@ async function guidedImpersonate() {
 
     await exclusive('ggsi_impersonate', async () => {
         outlineBeforeImpersonation = current;
-        try {
-            let result = await runImpersonation(buildImpersonatePrompt(current));
+        const s = settings();
+        const c = ctx();
+        const attempt = ({ strict, reason = null }) => {
+            const prompt = buildImpersonatePrompt(current, { reason });
+            return strict ? runStrictImpersonation(prompt) : runImpersonation(prompt);
+        };
 
-            if (result && settings().povRetry && hasPovSlip(result)) {
-                console.info(LOG, 'Impersonation slipped into first person; retrying once.');
-                setStatus('Fixing point of view…');
-                const retry = await runImpersonation(buildImpersonatePrompt(current, { retry: true }));
-                if (retry && countFirstPerson(retry) < countFirstPerson(result)) result = retry;
-                if (hasPovSlip(result)) {
-                    notify('warning', 'The model kept slipping into first person. You may want to edit or retry.');
-                }
+        try {
+            const strict = s.strictImpersonate && canUseStrict();
+            let result = await attempt({ strict });
+            let slip = impersonationSlip(result);
+
+            if (slip && s.povRetry) {
+                console.info(LOG, `Impersonation slipped (${slip}); retrying once.`);
+                setStatus(slip === 'char' ? `Keeping it as ${c.name1}…` : 'Fixing point of view…');
+                // A reply written as {{char}} is retried in strict mode, which is much harder to derail.
+                const retry = await attempt({ strict: canUseStrict() && (strict || slip === 'char'), reason: slip });
+                if (slipScore(retry) < slipScore(result)) result = retry;
+                slip = impersonationSlip(result);
             }
 
             if (!result) {
@@ -198,6 +287,14 @@ async function guidedImpersonate() {
             }
             setInput(result);
             lastImpersonation = result;
+
+            if (slip === 'char') {
+                notify('warning', canUseStrict() && !strict
+                    ? `This still reads like ${c.name2}'s reply. Turn on Strict mode in the settings, or edit and retry.`
+                    : `This still reads like ${c.name2}'s reply. You may want to edit or retry.`);
+            } else if (slip === 'pov') {
+                notify('warning', 'The model kept slipping into first person. You may want to edit or retry.');
+            }
         } catch (error) {
             setInput(outlineBeforeImpersonation);
             throw error;

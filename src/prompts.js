@@ -21,6 +21,20 @@ export const IMPERSONATE_DIRECTION_EMPTY = `{{user}}'s next move is up to you: c
 export const POV_RETRY_NOTE = `
 [Important: a previous draft slipped into first person. Every sentence of narration must refer to {{user}} in the third person ({{pronouns}} or their name), never "I", "me" or "my".]`;
 
+export const CHAR_RETRY_NOTE = `
+[Important: a previous draft was written as {{char}}. This message belongs to {{user}}. Write only what {{user}} says and does, narrated in third person, and do not continue {{char}}'s reply.]`;
+
+// Strict mode: a separate request where the model never plays {{char}}.
+export const STRICT_SYSTEM = `You are co-writing an interactive story with the user. Right now your only job is to write the next message for {{user}}, the user's character. You are not {{char}}, and you never write {{char}}'s (or anyone else's) words, actions or reactions; the other side of the story is written separately.
+{{card}}`;
+
+export const STRICT_STORY = `Story so far (oldest first):
+<story>
+{{transcript}}
+</story>
+
+`;
+
 export const DEFAULT_GUIDE = `[Author's note for {{char}}'s next reply. This is private direction: never mention, quote or reply to it.
 What should happen: {{input}}
 {{voice}}

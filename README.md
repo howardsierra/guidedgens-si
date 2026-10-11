@@ -23,8 +23,23 @@ While one runs, it shows a spinner and a short status, and the other buttons are
 **Impersonate sounds like you, and only in third person**
 - The prompt gives the model your persona description plus a few lines you've actually spoken in this chat, so it copies how *you* talk instead of a generic voice.
 - It has strict rules: third-person narration only, only your persona's own words and actions, and nothing written for the character.
-- The result is checked. If the narration slips into "I/me/my", it retries once automatically (you can turn this off). It also removes a leading `YourName:` and cuts off anything after the model starts a `CharName:` line.
+- The result is checked. If the narration slips into "I/me/my", **or the result reads like the character's reply instead of yours**, it retries once automatically (you can turn this off). It also removes a leading `YourName:` and cuts off anything after the model starts a `CharName:` line.
 - Set your pronouns in the settings (e.g. `she/her`) so the model never has to guess.
+
+**Stopping it from answering as the character (Strict mode)**
+
+With Chat Completion APIs (Claude, GPT, Gemini, OpenRouter, …) the model spends the whole chat playing the character, and your preset usually says "write {{char}}'s next reply". SillyTavern's impersonation only adds a note at the end, so models often slide back into the character's reply.
+
+**Strict mode** sends impersonation as a separate request where the model never plays the character:
+- The system prompt says it writes only for your persona and is *not* the character.
+- The character card, scenario and active world info are included as reference only.
+- The story so far is a transcript, followed by your outline and the third-person rules.
+
+**Start with your name** goes one step further and makes the model begin with your persona's name, which locks in third person. That works best with Claude and other models that accept a prefill.
+
+Even with Strict mode off, **Auto-fix slips** notices when a result reads like the character's reply and retries that one in strict mode. It looks for narration that calls you "you", openings with the character's name, and narration that's mostly about the character.
+
+Strict mode leaves out your preset's prompts (main prompt, jailbreak and so on). If your model needs those to write freely, keep Strict mode off and rely on Auto-fix. With Text Completion APIs, SillyTavern's impersonation already ends the prompt with `YourName:`, which keeps the model on your side, so Strict mode isn't needed (or used) there.
 
 **Response and swipe sound like the character**
 - The original sent your text as a bare instruction (`[Take the following into special consideration…]`) right after the last message, so models often answered the note, or switched into an assistant voice.
@@ -63,13 +78,15 @@ Requires a recent SillyTavern (1.13.0+ for Guided Swipe). It can run alongside t
 
 Under **Extensions → Guided Gens SI**. Everything follows your SillyTavern theme colours.
 
-<img src="docs/settings.png" alt="Settings panel" width="320">
+<img src="docs/settings.png" alt="Settings panel" width="320"> <img src="docs/settings-persona.png" alt="Persona settings with Strict mode" width="320">
 
 - **Buttons**: show or hide each button; **Compact** for icons only.
 - **Your persona**
   - **Pronouns**: type them or tap a chip (she/her, he/him, they/them). They're used in the third-person rule.
   - **Restate persona**: repeats your persona description right next to the instruction (turn it off to save tokens).
-  - **Fix point of view**: one automatic retry if the narration uses I/me/my.
+  - **Strict mode**: impersonate from a separate request where the model never plays the character (see above). Chat Completion only.
+  - **Start with your name**: in strict mode, begin the message with your persona's name.
+  - **Auto-fix slips**: one automatic retry if the narration uses I/me/my or reads like the character's reply; that retry uses strict mode.
   - **Voice samples**: how many of your spoken lines to quote (0 = off).
 - **Character**
   - **Voice samples**: how many of the character's recent lines to quote (0 = off).

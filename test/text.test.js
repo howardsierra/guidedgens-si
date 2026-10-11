@@ -59,3 +59,38 @@ test('replaceRange keeps the selection whitespace', async () => {
     const text = 'One. Two three. Four.';
     assert.equal(replaceRange(text, 4, 16, 'Changed.'), 'One. Changed. Four.');
 });
+
+test('looksLikeCharReply spots replies written as the character', async () => {
+    const { looksLikeCharReply } = await import('../src/text.js');
+    const chars = ['Seraphina'];
+    // Proper third-person user messages.
+    assert.equal(looksLikeCharReply('Mara steps forward. "I am fine," she says.', 'Mara', chars), false);
+    assert.equal(looksLikeCharReply('*She shrugs and looks at Seraphina.* "Whatever."', 'Mara', chars), false);
+    assert.equal(looksLikeCharReply('Mara glances at Seraphina. Seraphina is smiling; Seraphina always smiles.', 'Mara', chars), false);
+    // Slid into the character's reply.
+    assert.equal(looksLikeCharReply('*Seraphina tilts her head.* "Are you sure?" She takes your hand.', 'Mara', chars), true);
+    assert.equal(looksLikeCharReply('She smiles at you and squeezes your hand.', 'Mara', chars), true);
+    assert.equal(looksLikeCharReply('Seraphina sighs. "Fine."', 'Mara', chars), true);
+    assert.equal(looksLikeCharReply('', 'Mara', chars), false);
+});
+
+test('buildTranscript keeps the newest messages within budget', async () => {
+    const { buildTranscript } = await import('../src/text.js');
+    const chat = [
+        { name: 'A', mes: 'x'.repeat(50) },
+        { name: 'B', mes: 'hidden', is_system: true },
+        { name: 'A', mes: 'second' },
+        { name: 'C', mes: 'third' },
+    ];
+    assert.equal(buildTranscript(chat, 30), 'A: second\n\nC: third');
+    assert.equal(buildTranscript(chat, 1), 'C: third');
+});
+
+test('joinPrefill avoids doubling the name', async () => {
+    const { joinPrefill } = await import('../src/text.js');
+    assert.equal(joinPrefill('Mara', ' steps forward.'), 'Mara steps forward.');
+    assert.equal(joinPrefill('Mara', "'s eyes narrow."), "Mara's eyes narrow.");
+    assert.equal(joinPrefill('Mara', 'Mara steps forward.'), 'Mara steps forward.');
+    assert.equal(joinPrefill('Mara', 'steps forward.'), 'Mara steps forward.');
+    assert.equal(joinPrefill('', ' steps.'), 'steps.');
+});

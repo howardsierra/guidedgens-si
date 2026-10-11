@@ -151,7 +151,9 @@ function settingsHtml() {
           </div>
         </div>
         ${toggle('includePersona', 'Restate persona', 'Repeat your persona description next to the instruction.')}
-        ${toggle('povRetry', 'Fix point of view', 'Retry once if the narration slips into "I / me / my".')}
+        ${toggle('strictImpersonate', 'Strict mode', 'Write from a separate request where the model never plays the character. The strongest fix if it keeps answering as them. Leaves out your preset\'s prompts. Chat Completion only.')}
+        ${toggle('strictPrefillName', 'Start with your name', 'Strict mode: begin the message with your persona\'s name, locking in third person. Works best with Claude and other models that accept a prefill.')}
+        ${toggle('povRetry', 'Auto-fix slips', 'Retry once if it slips into first person or into the character\'s reply. That retry uses strict mode.')}
         ${slider('userVoiceSamples', 'Voice samples', 'Lines you\'ve spoken in this chat, quoted so it talks like you.', 15)}
       </section>
 
