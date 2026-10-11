@@ -13,7 +13,9 @@ It has just four buttons, and they're built to stay in character.
 | **Swipe** | A new swipe of the character's last message, following your direction, **in their own voice**. Leave the box empty for a plain swipe. |
 | **Correct** | Rewrite any message, or just a highlighted part of it, from your instructions, keeping the speaker's voice. See [Corrections](#corrections). |
 
-While one runs, it shows a spinner and a short status, and the other buttons are locked so you can't start two generations at once. On narrow screens (or with **Compact** on) the bar shows icons only.
+While one runs, it shows a spinner and a short status, and the other buttons are locked so you can't start two generations at once.
+
+**Stopping:** a red **Stop** button appears while something runs. You can also click the spinning button again, press **Esc**, or use SillyTavern's own stop button. The request is cancelled and nothing is applied: no auto-retry, no correction, and Impersonate puts your outline back in the box. On narrow screens (or with **Compact** on) the bar shows icons only.
 
 ![Busy state](docs/bar-busy.png)
 ![After impersonating, the button offers your outline back](docs/bar-outline.png)

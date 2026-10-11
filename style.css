@@ -101,8 +101,10 @@
     outline-offset: 1px;
 }
 
-#ggsi_bar .ggsi-btn:disabled {
+#ggsi_bar .ggsi-btn:disabled,
+#ggsi_bar .ggsi-btn:disabled:hover {
     opacity: 0.35;
+    background: transparent;
     cursor: not-allowed;
 }
 
@@ -124,6 +126,46 @@
 
 #ggsi_bar .ggsi-btn.ggsi-running .ggsi-icon {
     animation: ggsi-spin 0.9s linear infinite;
+}
+
+/* Hovering the running button previews that a click stops it. */
+#ggsi_bar .ggsi-btn.ggsi-running:hover .ggsi-icon {
+    animation: none;
+}
+
+#ggsi_bar .ggsi-btn.ggsi-running:hover .ggsi-icon::before {
+    content: "\f04d"; /* fa-stop */
+}
+
+/* Stop button, only shown while something runs. */
+#ggsi_bar .ggsi-btn[hidden] {
+    display: none;
+}
+
+#ggsi_bar .ggsi-stop {
+    --ggsi-danger: color-mix(in srgb, #e5484d 80%, var(--ggsi-fg));
+    color: var(--ggsi-danger);
+    animation: ggsi-pop 0.18s ease-out;
+}
+
+#ggsi_bar .ggsi-stop .ggsi-icon {
+    color: var(--ggsi-danger);
+    opacity: 1;
+}
+
+#ggsi_bar .ggsi-stop:hover {
+    background: color-mix(in srgb, #e5484d 18%, transparent);
+}
+
+#ggsi_bar .ggsi-stop:hover .ggsi-icon {
+    color: var(--ggsi-danger);
+}
+
+@keyframes ggsi-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
 }
 
 /* Impersonate result sitting in the box: the button becomes "Outline". */

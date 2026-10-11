@@ -55,6 +55,8 @@ const DEFAULTS = Object.freeze({
 });
 
 let busy = false;
+// Set when the user stops a running generation (our Stop button, Esc, or SillyTavern's own stop).
+let aborted = false;
 let lastImpersonation = '';
 let outlineBeforeImpersonation = '';
 
@@ -99,16 +101,36 @@ async function exclusive(buttonId, fn) {
         return;
     }
     busy = true;
+    aborted = false;
     setBusy(buttonId);
     try {
         await fn();
     } catch (error) {
-        console.error(LOG, error);
-        notify('error', error?.message ?? String(error));
+        // A stopped request rejects with an abort error; that's expected, not a failure.
+        if (!aborted) {
+            console.error(LOG, error);
+            notify('error', error?.message ?? String(error));
+        }
     } finally {
         busy = false;
         setBusy(null);
         syncImpersonateButton();
+        if (aborted) notify('info', 'Stopped.');
+        aborted = false;
+    }
+}
+
+const isAborted = () => aborted;
+
+/** Stops whatever the extension is generating. SillyTavern's stop also cancels quiet and raw requests. */
+function abortGeneration() {
+    if (!busy || aborted) return;
+    aborted = true;
+    setStatus('Stopping…');
+    try {
+        ctx().stopGeneration();
+    } catch (error) {
+        console.warn(LOG, 'stopGeneration failed', error);
     }
 }
 
@@ -269,6 +291,10 @@ async function guidedImpersonate() {
         try {
             const strict = s.strictImpersonate && canUseStrict();
             let result = await attempt({ strict });
+            if (aborted) {
+                setInput(outlineBeforeImpersonation);
+                return;
+            }
             let slip = impersonationSlip(result);
 
             if (slip && s.povRetry) {
@@ -276,6 +302,10 @@ async function guidedImpersonate() {
                 setStatus(slip === 'char' ? `Keeping it as ${c.name1}…` : 'Fixing point of view…');
                 // A reply written as {{char}} is retried in strict mode, which is much harder to derail.
                 const retry = await attempt({ strict: canUseStrict() && (strict || slip === 'char'), reason: slip });
+                if (aborted) {
+                    setInput(outlineBeforeImpersonation);
+                    return;
+                }
                 if (slipScore(retry) < slipScore(result)) result = retry;
                 slip = impersonationSlip(result);
             }
@@ -368,6 +398,7 @@ async function swipeToNew() {
         if ((message?.swipe_id ?? 0) >= count - 1) break;
         await ctx().swipe.right();
     }
+    if (aborted) return;
     await ctx().swipe.right();
 }
 
@@ -415,7 +446,7 @@ const BUTTONS = [
         id: 'ggsi_correct', setting: 'showCorrect', icon: 'fa-wand-magic-sparkles', label: 'Correct',
         hint: 'Rewrite a message (or just a highlighted part of it) following your instructions, in the speaker\'s voice.',
         busyText: 'Correcting the message…',
-        action: () => openCorrections({ settings, save, exclusive, substitute }),
+        action: () => openCorrections({ settings, save, exclusive, substitute, isAborted }),
     },
 ];
 
@@ -433,15 +464,26 @@ function init() {
         templateDefaults: TEMPLATE_DEFAULTS,
         onChange: key => {
             if (key.startsWith('show') || key === 'compactButtons') {
-                renderBar(BUTTONS, s);
+                renderBar(BUTTONS, s, { onStop: abortGeneration });
                 syncImpersonateButton();
             }
         },
     });
-    renderBar(BUTTONS, s);
+    renderBar(BUTTONS, s, { onStop: abortGeneration });
     textarea()?.addEventListener('input', syncImpersonateButton);
 
     const { eventSource, event_types } = ctx();
+    // SillyTavern's own stop button (or its Esc shortcut) also counts as aborting our run.
+    eventSource.on(event_types.GENERATION_STOPPED, () => {
+        if (busy) aborted = true;
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !busy || event.defaultPrevented) return;
+        // Leave Esc alone while a popup (e.g. Corrections) is open; it closes the popup there.
+        if (document.querySelector('dialog[open]')) return;
+        abortGeneration();
+    });
+
     eventSource.on(event_types.CHAT_CHANGED, () => {
         lastImpersonation = '';
         outlineBeforeImpersonation = '';

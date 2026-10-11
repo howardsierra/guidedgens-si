@@ -16,9 +16,17 @@ const BAR_ID = 'ggsi_bar';
 
 /** @type {BarButton[]} */
 let buttons = [];
+/** @type {() => void} */
+let stopHandler = () => {};
 
-export function renderBar(barButtons, settings) {
+/**
+ * @param {BarButton[]} barButtons
+ * @param {object} settings
+ * @param {{ onStop?: () => void }} [options]
+ */
+export function renderBar(barButtons, settings, { onStop } = {}) {
     buttons = barButtons;
+    if (onStop) stopHandler = onStop;
     const anchor = document.getElementById('nonQRFormItems');
     if (!anchor) {
         console.error('[Guided Gens SI] Could not find #nonQRFormItems; buttons not added.');
@@ -54,10 +62,21 @@ export function renderBar(barButtons, settings) {
         el.title = button.hint;
         el.setAttribute('aria-label', button.label);
         el.innerHTML = `<i class="ggsi-icon fa-solid ${button.icon}"></i><span class="ggsi-label">${button.label}</span>`;
-        el.addEventListener('click', () => button.action());
+        // While it runs, clicking the same button stops it.
+        el.addEventListener('click', () => (el.classList.contains('ggsi-running') ? stopHandler() : button.action()));
         group.appendChild(el);
     }
     bar.hidden = group.childElementCount === 0;
+
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.className = 'ggsi-btn ggsi-stop';
+    stop.title = 'Stop generating (Esc)';
+    stop.setAttribute('aria-label', 'Stop');
+    stop.hidden = true;
+    stop.innerHTML = '<i class="ggsi-icon fa-solid fa-stop"></i><span class="ggsi-label">Stop</span>';
+    stop.addEventListener('click', () => stopHandler());
+    group.appendChild(stop);
 }
 
 export function setStatus(text = '') {
@@ -72,13 +91,16 @@ export function setBusy(buttonId) {
     const bar = document.getElementById(BAR_ID);
     if (!bar) return;
     bar.classList.toggle('ggsi-busy', !!buttonId);
-    for (const el of bar.querySelectorAll('.ggsi-btn')) {
+    const button = buttons.find(b => b.id === buttonId);
+    for (const el of bar.querySelectorAll('.ggsi-btn:not(.ggsi-stop)')) {
         const running = el.id === buttonId;
         el.classList.toggle('ggsi-running', running);
         el.disabled = !!buttonId && !running;
         el.setAttribute('aria-busy', String(running));
+        el.title = running ? 'Click to stop' : (buttons.find(b => b.id === el.id)?.hint ?? el.title);
     }
-    const button = buttons.find(b => b.id === buttonId);
+    const stop = bar.querySelector('.ggsi-stop');
+    if (stop) stop.hidden = !buttonId;
     setStatus(button?.busyText ?? '');
 }
 

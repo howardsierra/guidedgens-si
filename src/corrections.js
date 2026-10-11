@@ -355,8 +355,9 @@ async function editInPlace(index, text) {
  * @param {() => void} deps.save
  * @param {(buttonId: string, fn: () => Promise<void>) => Promise<void>} deps.exclusive
  * @param {(text: string) => string} deps.substitute
+ * @param {() => boolean} deps.isAborted
  */
-export async function openCorrections({ settings, save, exclusive, substitute }) {
+export async function openCorrections({ settings, save, exclusive, substitute, isAborted }) {
     const s = settings();
     const choice = await chooseCorrection(s);
     save();
@@ -368,6 +369,7 @@ export async function openCorrections({ settings, save, exclusive, substitute })
         const { prompt, speaker, selected } = buildPrompt(choice, s, substitute);
 
         const raw = await generate(prompt, choice.includeHistory);
+        if (isAborted()) return;
         const rewrite = cleanRewrite(raw, selected || choice.baseText, speaker);
         if (!rewrite) {
             toastr.warning('The model returned nothing, so the message was left unchanged.', 'Guided Gens SI');
