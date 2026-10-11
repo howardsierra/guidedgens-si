@@ -8,6 +8,8 @@ import {
     hasPovSlip,
     joinPrefill,
     looksLikeCharReply,
+    parseDirectionCheck,
+    plainForCheck,
 } from './src/text.js';
 import {
     CHAR_RETRY_NOTE,
@@ -15,6 +17,9 @@ import {
     DEFAULT_CORRECT_SELECTION,
     DEFAULT_GUIDE,
     DEFAULT_IMPERSONATE,
+    DIRECTION_CHECK,
+    DIRECTION_CHECK_SYSTEM,
+    DIRECTION_RETRY_NOTE,
     IMPERSONATE_DIRECTION_EMPTY,
     IMPERSONATE_DIRECTION_WITH_INPUT,
     POV_RETRY_NOTE,
@@ -48,6 +53,7 @@ const DEFAULTS = Object.freeze({
     guideDepth: 0,
     guideRole: 'system',
     guideAtEnd: true,
+    directionCheck: true,
     impersonateTemplate: '',
     guideTemplate: '',
     correctIncludeHistory: true,
@@ -141,7 +147,7 @@ function syncImpersonateButton() {
 
 // --- Impersonate (third person) ---------------------------------------------
 
-function buildImpersonatePrompt(input, { reason = null } = {}) {
+function buildImpersonatePrompt(input, { reason = null, missed = '' } = {}) {
     const s = settings();
     const c = ctx();
 
@@ -164,6 +170,7 @@ function buildImpersonatePrompt(input, { reason = null } = {}) {
     });
     if (reason === 'pov') prompt += fillTemplate(POV_RETRY_NOTE, { pronouns });
     if (reason === 'char') prompt += CHAR_RETRY_NOTE;
+    if (reason === 'direction') prompt += fillTemplate(DIRECTION_RETRY_NOTE, { missed });
 
     return substitute(prompt);
 }
@@ -285,8 +292,10 @@ async function guidedImpersonate() {
         outlineBeforeImpersonation = current;
         const s = settings();
         const c = ctx();
-        const attempt = ({ strict, reason = null }) => {
-            const prompt = buildImpersonatePrompt(current, { reason });
+        let usedStrict = false;
+        const attempt = ({ strict, reason = null, missed = '' }) => {
+            usedStrict = strict;
+            const prompt = buildImpersonatePrompt(current, { reason, missed });
             return strict ? runStrictImpersonation(prompt) : runImpersonation(prompt);
         };
 
@@ -303,13 +312,46 @@ async function guidedImpersonate() {
                 console.info(LOG, `Impersonation slipped (${slip}); retrying once.`);
                 setStatus(slip === 'char' ? `Keeping it as ${c.name1}…` : 'Fixing point of view…');
                 // A reply written as {{char}} is retried in strict mode, which is much harder to derail.
-                const retry = await attempt({ strict: canUseStrict() && (strict || slip === 'char'), reason: slip });
+                const retryStrict = canUseStrict() && (strict || slip === 'char');
+                const retry = await attempt({ strict: retryStrict, reason: slip });
                 if (aborted) {
                     setInput(outlineBeforeImpersonation);
                     return;
                 }
                 if (slipScore(retry) < slipScore(result)) result = retry;
+                else usedStrict = strict;
                 slip = impersonationSlip(result);
+            }
+
+            let directionMissed = '';
+            if (result && current.trim() && s.directionCheck) {
+                const check = await checkDirection(current, result);
+                if (aborted) {
+                    setInput(outlineBeforeImpersonation);
+                    return;
+                }
+                if (!check.pass) {
+                    console.info(LOG, 'Impersonation missed the direction; redoing once.', check.missed);
+                    setStatus('Redoing: part of your direction was missed…');
+                    const retry = await attempt({ strict: usedStrict, reason: 'direction', missed: check.missed });
+                    if (aborted) {
+                        setInput(outlineBeforeImpersonation);
+                        return;
+                    }
+                    const recheck = retry ? await checkDirection(current, retry) : check;
+                    if (aborted) {
+                        setInput(outlineBeforeImpersonation);
+                        return;
+                    }
+                    // Take the redo if it follows the direction, or at least doesn't slip more than the first try.
+                    if (retry && (recheck.pass || slipScore(retry) <= slipScore(result))) {
+                        result = retry;
+                        directionMissed = recheck.pass ? '' : recheck.missed;
+                    } else {
+                        directionMissed = check.missed;
+                    }
+                    slip = impersonationSlip(result);
+                }
             }
 
             if (!result) {
@@ -327,6 +369,7 @@ async function guidedImpersonate() {
             } else if (slip === 'pov') {
                 notify('warning', 'The model kept slipping into first person. You may want to edit or retry.');
             }
+            if (directionMissed) notify('warning', `It still misses part of your direction:\n${directionMissed}`);
         } catch (error) {
             setInput(outlineBeforeImpersonation);
             throw error;
@@ -382,6 +425,54 @@ function clearGuide() {
     ctx().setExtensionPrompt(GUIDE_KEY, '', IN_CHAT, 0);
 }
 
+/** Asks the model, in a small separate request, whether `passage` carries out `direction`. */
+async function checkDirection(direction, passage) {
+    setStatus('Checking your direction…');
+    const prompt = substitute(fillTemplate(DIRECTION_CHECK, { direction: direction.trim(), reply: plainForCheck(passage) }));
+    try {
+        const answer = await ctx().generateRaw({ prompt, systemPrompt: DIRECTION_CHECK_SYSTEM });
+        const result = parseDirectionCheck(answer);
+        console.info(LOG, 'Direction check:', result.pass ? 'pass' : 'fail', answer);
+        return result;
+    } catch (error) {
+        if (aborted) throw error;
+        // A failed check must never block the reply itself.
+        console.warn(LOG, 'Direction check failed; skipping it.', error);
+        return { pass: true, missed: '' };
+    }
+}
+
+/**
+ * After a guided reply or swipe: if the character's latest message missed the
+ * direction, redo it once as a new swipe, told exactly what it got wrong.
+ */
+async function enforceDirection(input) {
+    if (!settings().directionCheck || !input.trim() || aborted) return;
+    const c = ctx();
+    const last = c.chat.at(-1);
+    if (!last || last.is_user || last.is_system || !last.mes) return;
+
+    const check = await checkDirection(input, last.mes);
+    if (check.pass || aborted) return;
+
+    console.info(LOG, 'Reply missed the direction; redoing once.', check.missed);
+    setStatus('Redoing: part of your direction was missed…');
+    const guide = buildGuide(input, { speakerName: last.name, skipIndex: c.chat.length - 1 });
+    setGuide(guide + substitute(fillTemplate(DIRECTION_RETRY_NOTE, { missed: check.missed })));
+    try {
+        await swipeToNew();
+    } finally {
+        clearGuide();
+    }
+    if (aborted) return;
+
+    const recheck = await checkDirection(input, ctx().chat.at(-1)?.mes ?? '');
+    if (aborted) return;
+    notify(recheck.pass ? 'info' : 'warning', recheck.pass
+        ? 'The first reply missed part of your direction, so it was redone. The first try is one swipe back.'
+        : `The redo still misses part of your direction (the first try is one swipe back):\n${recheck.missed}`);
+}
+
 async function guidedResponse() {
     await exclusive('ggsi_response', async () => {
         const c = ctx();
@@ -393,6 +484,8 @@ async function guidedResponse() {
         try {
             setInput('');
             await c.executeSlashCommandsWithOptions('/trigger await=true');
+            clearGuide();
+            await enforceDirection(input);
         } finally {
             clearGuide();
             setInput(input);
@@ -431,6 +524,8 @@ async function guidedSwipe() {
         }
         try {
             await swipeToNew();
+            clearGuide();
+            await enforceDirection(input);
         } finally {
             clearGuide();
             setInput(input);

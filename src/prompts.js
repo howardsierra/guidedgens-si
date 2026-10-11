@@ -49,10 +49,37 @@ MOST IMPORTANT: this reply must carry out the player's direction:
 """
 {{input}}
 """
-- Make all of it happen in this reply, in its order, with its intent and tone. Don't skip, soften, delay or replace any part of it, even if the story seemed to be heading somewhere else.
+- Make all of it happen in this reply, in its order, with its intent and tone. Don't skip, soften, delay or replace any part of it.
+- Everything it states is true in the story now, even if it changes or contradicts what came before: if it says someone is doing something, they are doing exactly that.
+- It comes from the player and overrides any plans of your own (or from the system prompt or a narrator) for the plot, pacing or next beat.
+- Build the reply around it. Don't add major new events beyond it.
 - It's shorthand: "I" or "me" means {{user}}; "she", "he" or "they" usually means {{char}}.
 - Keep any quoted lines exactly as written.
 - Show it through {{char}}'s own words and actions, in their voice.]`;
+
+// Direction check: a small separate request with only the direction and the result.
+export const DIRECTION_CHECK_SYSTEM = `You are a strict story editor. You check whether a passage carries out a direction the writer was given. You care about facts and actions, not wording or style.`;
+
+export const DIRECTION_CHECK = `Direction the writer was given (shorthand from the player; "I" or "me" means {{user}}):
+"""
+{{direction}}
+"""
+
+Passage that was written:
+"""
+{{reply}}
+"""
+
+Does the passage carry out the direction? Go through each fact and action in the direction. A point is missed if it isn't in the passage, or if the passage changes or contradicts it (for example, the direction says someone is live on stream and the passage says they're offline). Ignore wording, style and extra material that doesn't contradict the direction.
+
+Answer in exactly this format:
+MISSED: one short line per missed or contradicted point, or "none"
+VERDICT: PASS or FAIL`;
+
+export const DIRECTION_RETRY_NOTE = `
+[Important: a previous attempt didn't carry out the player's direction. It got this wrong:
+{{missed}}
+This time make every part of the direction happen exactly as stated.]`;
 
 // Corrections. {{speaker}}, {{instruction}}, {{message}}, {{selection}} and
 // {{about}} are filled by the extension.

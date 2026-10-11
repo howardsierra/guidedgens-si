@@ -51,6 +51,18 @@ Strict mode leaves out your preset's prompts (main prompt, jailbreak and so on).
 - It includes a few of the character's own recent lines as a voice anchor. For swipes, the message being replaced is left out.
 - The note goes in through SillyTavern's extension-prompt API rather than `/inject` slash commands, so `|` or other special characters in your text can't break it. It's always removed afterwards, even if generation fails or you press stop.
 
+## Direction check
+
+Models (and presets with their own narrator or "next beat" plans) sometimes take your direction as one ingredient and then do their own thing: "Slater is also on stream" comes back as "his stream was offline". So after **Impersonate**, **Respond** and **Swipe**, a small extra request checks the result against your direction. Only your direction and the result are sent, not the chat.
+
+- **Every point carried out:** nothing else happens.
+- **Something missed or contradicted:** it's redone once, and the redo is told exactly what was wrong (for example "Slater is offline instead of live on stream"). For Respond and Swipe the redo is a new swipe, so the first try is one swipe back. A notification tells you it happened.
+- **Still missed after the redo:** you get a warning listing what's still missing.
+
+The direction note also says that everything in your direction is true in the story now (even if it contradicts what came before), and that it overrides any plans of the model or the preset's narrator for the plot or next beat.
+
+Turn the check off under **Directions** in the settings if you'd rather save the extra request.
+
 ## Corrections
 
 Click **Correct** to open the corrections window.
@@ -85,6 +97,7 @@ Under **Extensions → Guided Gens SI**. Everything follows your SillyTavern the
 <img src="docs/settings.png" alt="Settings panel" width="320"> <img src="docs/settings-persona.png" alt="Persona settings with Strict mode" width="320">
 
 - **Buttons**: show or hide each button; **Compact** for icons only.
+- **Directions**: **Check the direction was followed** (on by default). See [Direction check](#direction-check).
 - **Your persona**
   - **Pronouns**: type them or tap a chip (she/her, he/him, they/them). They're used in the third-person rule.
   - **Restate persona**: repeats your persona description right next to the instruction (turn it off to save tokens).

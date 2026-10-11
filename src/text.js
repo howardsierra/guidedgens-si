@@ -172,3 +172,34 @@ export function joinPrefill(prefill, output) {
     const glue = /^[\s,.;:!?'’-]/.test(out) ? '' : ' ';
     return `${prefill}${glue}${out}`.trim();
 }
+
+/**
+ * Parses the direction checker's answer. Anything unparseable counts as a pass,
+ * so a confused checker never triggers a pointless redo.
+ * @returns {{ pass: boolean, missed: string }}
+ */
+export function parseDirectionCheck(answer) {
+    const text = String(answer ?? '');
+    const verdict = text.match(/VERDICT:\s*\**\s*(PASS|FAIL)/i);
+    if (!verdict || verdict[1].toUpperCase() === 'PASS') return { pass: true, missed: '' };
+    const missedBlock = text.match(/MISSED:\s*([\s\S]*?)\s*VERDICT:/i)?.[1] ?? '';
+    const missed = missedBlock
+        .split('\n')
+        .map(line => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
+        .filter(line => /[a-z0-9]/i.test(line) && !/^none\.?$/i.test(line))
+        .map(line => `- ${line}`)
+        .join('\n');
+    return missed ? { pass: false, missed } : { pass: true, missed: '' };
+}
+
+/** Plain text of a message for the checker: tags removed, whitespace squeezed, capped in length. */
+export function plainForCheck(text, maxChars = 12000) {
+    const plain = String(text ?? '')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/ *\n */g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    return plain.length > maxChars ? `${plain.slice(0, maxChars)}…` : plain;
+}

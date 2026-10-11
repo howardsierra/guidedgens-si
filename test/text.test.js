@@ -97,3 +97,22 @@ test('joinPrefill avoids doubling the name', async () => {
     assert.equal(joinPrefill('Mara', 'steps forward.'), 'Mara steps forward.');
     assert.equal(joinPrefill('', ' steps.'), 'steps.');
 });
+
+test('parseDirectionCheck reads the verdict and missed points', async () => {
+    const { parseDirectionCheck } = await import('../src/text.js');
+    assert.deepEqual(parseDirectionCheck('MISSED: none\nVERDICT: PASS'), { pass: true, missed: '' });
+    assert.deepEqual(
+        parseDirectionCheck('MISSED:\n- Slater is offline instead of live on stream\n- his chat is a Discord server, not his stream chat\nVERDICT: FAIL'),
+        { pass: false, missed: '- Slater is offline instead of live on stream\n- his chat is a Discord server, not his stream chat' },
+    );
+    assert.deepEqual(parseDirectionCheck('MISSED: 1. He never plays Valorant\n**VERDICT:** FAIL'), { pass: false, missed: '- He never plays Valorant' });
+    // Unparseable or contradictory answers never trigger a redo.
+    assert.equal(parseDirectionCheck('I cannot help with that.').pass, true);
+    assert.equal(parseDirectionCheck('MISSED: none\nVERDICT: FAIL').pass, true);
+});
+
+test('plainForCheck strips markup', async () => {
+    const { plainForCheck } = await import('../src/text.js');
+    assert.equal(plainForCheck('<div style="x">#general</div><span>hi</span>\n\n\n<b>yo</b>'), '#general hi\n\nyo');
+    assert.equal(plainForCheck('abcdef', 3), 'abc…');
+});

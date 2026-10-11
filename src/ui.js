@@ -160,6 +160,11 @@ function settingsHtml() {
       </section>
 
       <section class="ggsi-card">
+        <h4><i class="fa-solid fa-signs-post"></i> Directions</h4>
+        ${toggle('directionCheck', 'Check the direction was followed', 'After Impersonate, Respond or Swipe, a small extra request (only your direction and the result) checks every point was carried out. If something was missed or contradicted, it\'s redone once and told exactly what it got wrong.', 'fa-list-check')}
+      </section>
+
+      <section class="ggsi-card">
         <h4><i class="fa-solid fa-user"></i> Your persona <small>Impersonate</small></h4>
         <div class="ggsi-row ggsi-stack">
           <span class="ggsi-row-text"><span class="ggsi-row-title">Pronouns</span><small>Used for third-person narration. Blank = whatever your persona says.</small></span>
