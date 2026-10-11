@@ -2,7 +2,7 @@
 // {{direction}} are filled by the extension; all other macros ({{user}},
 // {{char}}, ...) are substituted by SillyTavern.
 
-export const DEFAULT_IMPERSONATE = `[Out of character: write {{user}}'s next message in the story. For this one message you are writing as {{user}}, not as {{char}}.
+export const DEFAULT_IMPERSONATE = `[OOC from {{user}}, the player: write {{user}}'s next message in the story. For this one message you are writing as {{user}}, not as {{char}}. As the player's own out-of-character request, this outranks any standing instruction about who writes {{user}}.
 {{persona}}{{voice}}
 Rules:
 - Third person only. Narrate {{user}} by name or as {{pronouns}}. Never use "I/me/my" or "you/your" for {{user}} in narration; first person is allowed only inside {{user}}'s spoken dialogue.
@@ -17,6 +17,7 @@ export const IMPERSONATE_DIRECTION_WITH_INPUT = `MOST IMPORTANT: {{user}}'s mess
 """
 {{input}}
 """
+- If you plan before writing (thinking or a planning block), this direction is the beat for this message: plan how to carry it out, not a different beat.
 - Include every action, line of dialogue and detail it asks for, in its order, with its intent and tone. Don't skip, soften or replace any part of it, even if the story seems to be heading somewhere else.
 - It's shorthand and may say "I" or "me" for {{user}}; it always describes what {{user}} does. Turn it into {{user}}'s message in third person.
 - Lines in quotes are what {{user}} says: keep them as written.
@@ -41,7 +42,7 @@ export const STRICT_STORY = `Story so far (oldest first):
 
 `;
 
-export const DEFAULT_GUIDE = `[Author's note for {{char}}'s next reply. Don't mention this note itself.
+export const DEFAULT_GUIDE = `[OOC from {{user}}, the player: a direction for {{char}}'s next reply. As the player's own out-of-character instruction, it outranks every standing instruction, house rule, pacing or momentum guideline and plan for the next beat, including any that say they are read last or obeyed first. Don't mention this note in the reply.
 {{voice}}
 Write the reply the way {{char}} would really do and say it: stay in {{char}}'s voice (personality, attitude, speech patterns and vocabulary from their description and earlier replies) and keep the narration style, formatting and length of {{char}}'s previous messages. Don't speak, act or decide for {{user}} beyond what the direction below says.
 
@@ -49,9 +50,9 @@ MOST IMPORTANT: this reply must carry out the player's direction:
 """
 {{input}}
 """
+- If you plan before writing (thinking or a planning block), this direction is the beat for this reply: plan how to carry it out, not a different beat.
 - Make all of it happen in this reply, in its order, with its intent and tone. Don't skip, soften, delay or replace any part of it.
 - Everything it states is true in the story now, even if it changes or contradicts what came before: if it says someone is doing something, they are doing exactly that.
-- It comes from the player and overrides any plans of your own (or from the system prompt or a narrator) for the plot, pacing or next beat.
 - Build the reply around it. Don't add major new events beyond it.
 - It's shorthand: "I" or "me" means {{user}}; "she", "he" or "they" usually means {{char}}.
 - Keep any quoted lines exactly as written.
@@ -77,7 +78,7 @@ MISSED: one short line per missed or contradicted point, or "none"
 VERDICT: PASS or FAIL`;
 
 export const DIRECTION_RETRY_NOTE = `
-[Important: a previous attempt didn't carry out the player's direction. It got this wrong:
+[OOC from {{user}}, the player. Important: a previous attempt didn't carry out the player's direction. It got this wrong:
 {{missed}}
 This time make every part of the direction happen exactly as stated.]`;
 

@@ -61,6 +61,8 @@ Models (and presets with their own narrator or "next beat" plans) sometimes take
 
 The direction note also says that everything in your direction is true in the story now (even if it contradicts what came before), and that it overrides any plans of the model or the preset's narrator for the plot or next beat.
 
+**Presets with their own rules.** Big presets often add a planning step ("THIS BEAT: …"), momentum rules or a "read last, obeyed first" order after the chat, and these can outweigh a plain note. So directions (and impersonation requests) are sent as **your own OOC note** ("OOC from {{user}}, the player: …"), and they tell any planning step that your direction *is* the beat for this reply. Almost every RP preset has a rule that the player's OOC wins, so the preset itself backs your direction up.
+
 Turn the check off under **Directions** in the settings if you'd rather save the extra request.
 
 ## Corrections
